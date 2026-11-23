@@ -1,0 +1,5 @@
+packages:
+  - "mobile-frontend"
+  - "web-frontend"
+  - "backend"
+  - "backend/db"

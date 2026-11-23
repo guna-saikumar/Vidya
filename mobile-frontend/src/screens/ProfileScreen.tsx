@@ -1,0 +1,814 @@
+import React, { useState, useCallback, useEffect } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StatusBar,
+  Image,
+  Switch,
+  Modal,
+  Linking,
+  Platform,
+} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useFocusEffect } from '@react-navigation/native';
+import { MaterialIcons } from '@expo/vector-icons';
+import Colors from '../constants/colors';
+import { HeaderBar, BottomNav } from '../components/navigation';
+import { PageIntro, HoverCard } from '../components/common';
+import { useLearningProgress } from '../hooks/useLearningProgress';
+import { useAuth } from '../hooks/useAuth';
+import { getClasses } from '../services/curriculumService';
+import { showAlert } from '../utils/dialog';
+import { RootStackParamList } from '../types/navigation';
+import { useAppDispatch } from '../store';
+import {
+  uploadAvatarThunk,
+  removeAvatarThunk,
+  setProfileAvatar,
+} from '../store/slices/studentSlice';
+
+type Props = NativeStackScreenProps<RootStackParamList, 'Profile'>;
+
+const MEDIA_COPY = {
+  camera: {
+    title: 'Camera access needed',
+    message: 'Allow camera access to take a profile photo.',
+  },
+  library: {
+    title: 'Photo access needed',
+    message: 'Allow photo library access to choose a profile photo.',
+  },
+} as const;
+
+/** Requests camera / photo library permission; offers Settings when it was permanently denied. */
+const ensureMediaPermission = async (kind: keyof typeof MEDIA_COPY): Promise<boolean> => {
+  const get =
+    kind === 'camera'
+      ? ImagePicker.getCameraPermissionsAsync
+      : ImagePicker.getMediaLibraryPermissionsAsync;
+  const request =
+    kind === 'camera'
+      ? ImagePicker.requestCameraPermissionsAsync
+      : ImagePicker.requestMediaLibraryPermissionsAsync;
+
+  let perm = await get();
+  if (!perm.granted && perm.canAskAgain) perm = await request();
+  if (perm.granted) return true;
+
+  const { title, message } = MEDIA_COPY[kind];
+  showAlert(
+    title,
+    message,
+    perm.canAskAgain || Platform.OS === 'web'
+      ? [{ text: 'OK' }]
+      : [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Open Settings',
+            onPress: () => {
+              // react-native-web's Linking has no openSettings implementation.
+              if (Platform.OS !== 'web') Linking.openSettings();
+            },
+          },
+        ]
+  );
+  return false;
+};
+
+export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
+  const dispatch = useAppDispatch();
+  const { user, logout } = useAuth();
+  const { profile, progressMap, saveProfile, refreshData } = useLearningProgress();
+  const [offlineSync, setOfflineSync] = useState(true);
+  // Derived from the profile so the UI updates when the profile loads or
+  // changes, without synchronising state inside an effect.
+  const [studyMediumOverride, setStudyMediumOverride] = useState<'English' | 'Telugu' | null>(null);
+  const profileStudyMedium: 'English' | 'Telugu' = (profile?.medium || '')
+    .toUpperCase()
+    .includes('TELUGU')
+    ? 'Telugu'
+    : 'English';
+  const studyMedium = studyMediumOverride ?? profileStudyMedium;
+  const setStudyMedium = setStudyMediumOverride;
+  const [selectedStudyGoal, setSelectedStudyGoal] = useState('45 mins');
+
+  useEffect(() => {
+    AsyncStorage.getItem('@vidya_study_goal')
+      .then((value) => {
+        if (value) {
+          setSelectedStudyGoal(value);
+          return;
+        }
+        if (profile?.studyGoalMinutes) {
+          setSelectedStudyGoal(`${profile.studyGoalMinutes} mins`);
+        }
+      })
+      .catch(() => {});
+  }, [profile?.studyGoalMinutes]);
+
+  const handleSelectStudyGoal = async (goal: string) => {
+    setSelectedStudyGoal(goal);
+    const minutes = parseInt(goal, 10) || 30;
+    try {
+      await AsyncStorage.setItem('@vidya_study_goal', goal);
+      await saveProfile({ studyGoalMinutes: minutes });
+    } catch {
+      showAlert('Could not update', 'Failed to save daily study goal.');
+    }
+  };
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
+  const [showSignOutModal, setShowSignOutModal] = useState(false);
+  const classes = getClasses();
+
+  useFocusEffect(
+    useCallback(() => {
+      void refreshData();
+    }, [refreshData])
+  );
+
+  const completedChaptersCount = Object.values(progressMap).filter((p) => p.completed).length;
+  const completedTopicsCount = Object.values(progressMap).reduce(
+    (total, p) => total + (p.completedSections?.length || 0),
+    0
+  );
+  const normalizedClassId = profile?.activeClassId?.startsWith('class-')
+    ? profile.activeClassId
+    : profile?.activeClassId
+    ? `class-${profile.activeClassId}`
+    : undefined;
+  const activeClass =
+    classes.find((c) => c.id === normalizedClassId) ||
+    classes.find((c) => c.id === profile?.activeClassId);
+
+  const pickImageFromDevice = async () => {
+    try {
+      if (!(await ensureMediaPermission('library'))) return;
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.85,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setShowAvatarModal(false);
+        const selectedUri = result.assets[0].uri;
+        const previousAvatar = profile?.avatarUrl || '';
+        dispatch(setProfileAvatar(selectedUri));
+
+        try {
+          await dispatch(uploadAvatarThunk(selectedUri)).unwrap();
+          showAlert('Profile Photo Updated', 'Your profile picture has been updated from your device.');
+        } catch (uploadErr: any) {
+          dispatch(setProfileAvatar(previousAvatar));
+          showAlert('Upload Failed', uploadErr || 'Could not upload profile picture. Please try again.');
+        }
+      }
+    } catch (err) {
+      console.error('Error picking image from device:', err);
+      showAlert('Error', 'Could not open photo library. Please try again.');
+    }
+  };
+
+  const takePhotoWithCamera = async () => {
+    try {
+      if (!(await ensureMediaPermission('camera'))) return;
+
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.85,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setShowAvatarModal(false);
+        const selectedUri = result.assets[0].uri;
+        const previousAvatar = profile?.avatarUrl || '';
+        dispatch(setProfileAvatar(selectedUri));
+
+        try {
+          await dispatch(uploadAvatarThunk(selectedUri)).unwrap();
+          showAlert('Profile Photo Updated', 'Your new photo has been saved as your profile picture.');
+        } catch (uploadErr: any) {
+          dispatch(setProfileAvatar(previousAvatar));
+          showAlert('Upload Failed', uploadErr || 'Could not upload photo. Please try again.');
+        }
+      }
+    } catch (err) {
+      console.error('Error taking photo with camera:', err);
+      showAlert('Error', 'Could not open camera. Please try again.');
+    }
+  };
+
+  const handleResetToDefault = async () => {
+    const previousAvatar = profile?.avatarUrl || '';
+    try {
+      setShowAvatarModal(false);
+      dispatch(setProfileAvatar(''));
+      await dispatch(removeAvatarThunk()).unwrap();
+      showAlert('Default Restored', 'Profile picture reset to default student icon.');
+    } catch (err: any) {
+      dispatch(setProfileAvatar(previousAvatar));
+      showAlert('Error', err || 'Failed to reset profile picture.');
+    }
+  };
+
+  return (
+    <View className="flex-1 bg-white">
+      <StatusBar barStyle="dark-content" />
+      <HeaderBar
+        title="Profile"
+        subtitle="Student preferences and study statistics."
+      />
+
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 18, paddingBottom: 48, gap: 24 }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Page Heading & Subheading */}
+        <PageIntro
+          eyebrow="STUDENT ACCOUNT"
+          badge={activeClass ? `${activeClass.title} Enrolled` : 'Class not set'}
+          title="Student Profile & Settings"
+        />
+
+        {/* Profile Card matching Figma Make .profile-card */}
+        <HoverCard className="bg-palePeach rounded-[22px] p-[22px] gap-3.5 border border-[#f2ded3] shadow-sm" lift={-3}>
+          <View className="flex-row items-center gap-4">
+            <View className="relative">
+              <TouchableOpacity
+                onPress={() => setShowAvatarModal(true)}
+                activeOpacity={0.85}
+                accessibilityRole="button"
+                accessibilityLabel="Edit profile picture"
+                className="relative"
+              >
+                <Image
+                  source={
+                    profile?.avatarUrl
+                      ? { uri: profile.avatarUrl }
+                      : require('../../assets/app-images/avatar.png')
+                  }
+                  className="w-[66px] h-[66px] rounded-full border-2 border-white shadow-sm"
+                  style={{ width: 66, height: 66, borderRadius: 33 }}
+                />
+                <View
+                  className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-primary items-center justify-center border-2 border-white shadow-md"
+                  style={{ backgroundColor: Colors.primary }}
+                >
+                  <MaterialIcons name="camera-alt" size={14} color="#ffffff" />
+                </View>
+              </TouchableOpacity>
+            </View>
+
+            <View className="flex-1 gap-1">
+              <View className="flex-row items-center justify-between">
+                <Text className="font-manrope-extrabold text-lg text-textPrimary">
+                  {profile?.firstName && profile?.lastName
+                    ? `${profile.firstName} ${profile.lastName}`
+                    : (profile?.displayName || user?.name || 'Student')}
+                </Text>
+                <View className="bg-primary px-2.5 py-0.5 rounded-full">
+                  <Text className="font-manrope-bold text-[10px] text-white">
+                    Roll #{profile?.rollNumber || '—'}
+                  </Text>
+                </View>
+              </View>
+              <Text className="font-manrope-medium text-xs text-textSecondary" numberOfLines={1}>
+                {profile?.schoolName || 'School not set'}
+              </Text>
+              <Text className="font-manrope-bold text-xs text-primaryDark mt-0.5">
+                {activeClass?.title || 'Class not set'} · Section {profile?.section || '—'} · {profile?.medium || '—'}
+              </Text>
+            </View>
+          </View>
+        </HoverCard>
+
+        {/* Student Personal Details Card */}
+        <View className="gap-2.5">
+          <View className="flex-row items-center justify-between">
+            <Text className="font-manrope-extrabold text-lg text-textPrimary tracking-tight">
+              Student Details
+            </Text>
+            <TouchableOpacity
+              className="flex-row items-center gap-1 bg-palePeach px-3 py-1.5 rounded-full border border-border"
+              onPress={() => navigation.navigate('StudentOnboarding', { isEdit: true })}
+              activeOpacity={0.8}
+            >
+              <MaterialIcons name="edit" size={14} color={Colors.primary} />
+              <Text className="font-manrope-bold text-xs text-primary">Edit Profile</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View className="bg-white rounded-[22px] p-5 border border-border shadow-sm gap-3.5">
+            <View className="flex-row items-center justify-between pb-3 border-b border-border">
+              <View className="flex-row items-center gap-2.5">
+                <MaterialIcons name="person" size={18} color={Colors.primary} />
+                <Text className="font-manrope-medium text-xs text-textSecondary">Student Name</Text>
+              </View>
+              <Text className="font-manrope-bold text-xs text-textPrimary">
+                {profile?.firstName && profile?.lastName ? `${profile.firstName} ${profile.lastName}` : (profile?.displayName || 'Student')}
+              </Text>
+            </View>
+
+            <View className="flex-row items-center justify-between pb-3 border-b border-border">
+              <View className="flex-row items-center gap-2.5">
+                <MaterialIcons name="cake" size={18} color={Colors.primary} />
+                <Text className="font-manrope-medium text-xs text-textSecondary">Date of Birth</Text>
+              </View>
+              <Text className="font-manrope-bold text-xs text-textPrimary">
+                {profile?.dateOfBirth || '—'}
+              </Text>
+            </View>
+
+            <View className="flex-row items-center justify-between pb-3 border-b border-border">
+              <View className="flex-row items-center gap-2.5">
+                <MaterialIcons name="people-outline" size={18} color={Colors.primary} />
+                <Text className="font-manrope-medium text-xs text-textSecondary">Gender</Text>
+              </View>
+              <Text className="font-manrope-bold text-xs text-textPrimary">
+                {profile?.gender || '—'}
+              </Text>
+            </View>
+
+            <View className="flex-row items-center justify-between">
+              <View className="flex-row items-center gap-2.5">
+                <MaterialIcons name="badge" size={18} color={Colors.primary} />
+                <Text className="font-manrope-medium text-xs text-textSecondary">Roll Number</Text>
+              </View>
+              <Text className="font-manrope-bold text-xs text-textPrimary">
+                #{profile?.rollNumber || '—'}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Academic Details Card (Collected from Student Form) */}
+        <View className="gap-2.5">
+          <View className="flex-row items-center justify-between">
+            <Text className="font-manrope-extrabold text-lg text-textPrimary tracking-tight">
+              Academic Information
+            </Text>
+            <TouchableOpacity
+              className="flex-row items-center gap-1 bg-palePeach px-3 py-1.5 rounded-full border border-border"
+              onPress={() => navigation.navigate('StudentOnboarding', { isEdit: true, step: 2 })}
+              activeOpacity={0.8}
+            >
+              <MaterialIcons name="edit" size={14} color={Colors.primary} />
+              <Text className="font-manrope-bold text-xs text-primary">Edit Details</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View className="bg-white rounded-[22px] p-5 border border-border shadow-sm gap-3.5">
+            <View className="flex-row items-center justify-between pb-3 border-b border-border">
+              <View className="flex-row items-center gap-2.5">
+                <MaterialIcons name="school" size={18} color={Colors.primary} />
+                <Text className="font-manrope-medium text-xs text-textSecondary">School</Text>
+              </View>
+              <Text className="font-manrope-bold text-xs text-textPrimary text-right flex-1 ml-3" numberOfLines={1}>
+                {profile?.schoolName || '—'}
+              </Text>
+            </View>
+
+            <View className="flex-row items-center justify-between pb-3 border-b border-border">
+              <View className="flex-row items-center gap-2.5">
+                <MaterialIcons name="location-on" size={18} color={Colors.primary} />
+                <Text className="font-manrope-medium text-xs text-textSecondary">Location & District</Text>
+              </View>
+              <Text className="font-manrope-bold text-xs text-textPrimary text-right flex-1 ml-3" numberOfLines={1}>
+                {[profile?.location, profile?.district].filter(Boolean).join(', ') || '—'}
+              </Text>
+            </View>
+
+            <View className="flex-row items-center justify-between pb-3 border-b border-border">
+              <View className="flex-row items-center gap-2.5">
+                <MaterialIcons name="class" size={18} color={Colors.primary} />
+                <Text className="font-manrope-medium text-xs text-textSecondary">Class & Section</Text>
+              </View>
+              <Text className="font-manrope-bold text-xs text-primaryDark">
+                {activeClass?.title || '—'} — Section {profile?.section || '—'}
+              </Text>
+            </View>
+
+            <View className="flex-row items-center justify-between pb-3 border-b border-border">
+              <View className="flex-row items-center gap-2.5">
+                <MaterialIcons name="translate" size={18} color={Colors.primary} />
+                <Text className="font-manrope-medium text-xs text-textSecondary">Medium</Text>
+              </View>
+              <Text className="font-manrope-bold text-xs text-textPrimary">
+                {profile?.medium || '—'}
+              </Text>
+            </View>
+
+            <View className="flex-row items-center justify-between">
+              <View className="flex-row items-center gap-2.5">
+                <MaterialIcons name="event" size={18} color={Colors.primary} />
+                <Text className="font-manrope-medium text-xs text-textSecondary">Academic Session</Text>
+              </View>
+              <Text className="font-manrope-bold text-xs text-textPrimary">
+                {profile?.academicYear || '—'} (AP SCERT)
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Parent & Contact Details Card */}
+        <View className="gap-2.5">
+          <Text className="font-manrope-extrabold text-lg text-textPrimary tracking-tight">
+            Parents & Contact Details
+          </Text>
+
+          <View className="bg-white rounded-[22px] p-5 border border-border shadow-sm gap-3.5">
+            <View className="flex-row items-center justify-between pb-3 border-b border-border">
+              <View className="flex-row items-center gap-2.5">
+                <MaterialIcons name="person-outline" size={18} color={Colors.primary} />
+                <Text className="font-manrope-medium text-xs text-textSecondary">Father&apos;s Name</Text>
+              </View>
+              <Text className="font-manrope-bold text-xs text-textPrimary">
+                {profile?.fatherName || profile?.guardianName || '—'}
+              </Text>
+            </View>
+
+            <View className="flex-row items-center justify-between pb-3 border-b border-border">
+              <View className="flex-row items-center gap-2.5">
+                <MaterialIcons name="face" size={18} color={Colors.primary} />
+                <Text className="font-manrope-medium text-xs text-textSecondary">Mother&apos;s Name</Text>
+              </View>
+              <Text className="font-manrope-bold text-xs text-textPrimary">
+                {profile?.motherName || '—'}
+              </Text>
+            </View>
+
+            <View className="flex-row items-center justify-between pb-3 border-b border-border">
+              <View className="flex-row items-center gap-2.5">
+                <MaterialIcons name="phone" size={18} color={Colors.primary} />
+                <Text className="font-manrope-medium text-xs text-textSecondary">Parent Contact Mobile</Text>
+              </View>
+              <Text className="font-manrope-bold text-xs text-textPrimary">
+                {profile?.parentPhone || profile?.guardianPhone || '—'}
+              </Text>
+            </View>
+
+            <View className="flex-row items-center justify-between">
+              <View className="flex-row items-center gap-2.5">
+                <MaterialIcons name="mail-outline" size={18} color={Colors.primary} />
+                <Text className="font-manrope-medium text-xs text-textSecondary">Login Email</Text>
+              </View>
+              <Text className="font-manrope-bold text-xs text-textPrimary">
+                {user?.email || '—'}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Profile Statistics / Achievements */}
+        <View className="gap-2">
+          <Text className="font-manrope-extrabold text-lg text-textPrimary tracking-tight">Achievements</Text>
+          <View className="flex-row gap-2.5 mt-1">
+            <View className="flex-1 py-3.5 px-2 border border-border rounded-2xl bg-white items-center shadow-sm">
+              <View className="w-[34px] h-[34px] rounded-[10px] bg-emerald-50 items-center justify-center mb-2">
+                <MaterialIcons name="check-circle" size={20} color="#059669" />
+              </View>
+              <Text className="font-manrope-extrabold text-lg text-textPrimary">{completedTopicsCount}</Text>
+              <Text className="font-manrope-semibold text-[11px] text-textSecondary mt-0.5">Topics Done</Text>
+            </View>
+
+            <View className="flex-1 py-3.5 px-2 border border-border rounded-2xl bg-white items-center shadow-sm">
+              <View className="w-[34px] h-[34px] rounded-[10px] bg-palePeach items-center justify-center mb-2">
+                <MaterialIcons name="emoji-events" size={20} color={Colors.primary} />
+              </View>
+              <Text className="font-manrope-extrabold text-lg text-textPrimary">{completedChaptersCount}</Text>
+              <Text className="font-manrope-semibold text-[11px] text-textSecondary mt-0.5">Chapters Done</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Settings Group */}
+        <View className="gap-2">
+          <Text className="font-manrope-extrabold text-lg text-textPrimary tracking-tight">Study Settings</Text>
+
+          <View className="bg-white rounded-2xl border border-border overflow-hidden shadow-sm">
+            {/* Language Preference */}
+            <View className="flex-row items-center justify-between p-4 border-b border-border">
+              <View className="flex-row items-center gap-3 flex-1">
+                <MaterialIcons name="translate" size={20} color={Colors.primary} />
+                <View>
+                  <Text className="font-manrope-bold text-[13px] text-textPrimary">Study Medium / Language</Text>
+                  <Text className="font-manrope-medium text-[11px] text-textSecondary mt-0.5">Primary instruction language</Text>
+                </View>
+              </View>
+              <View className="flex-row gap-1 bg-[#F5F2EF] p-1 rounded-xl">
+                <TouchableOpacity
+                  className={`px-2.5 py-1 rounded-lg ${studyMedium === 'English' ? 'bg-primary' : ''}`}
+                  activeOpacity={0.8}
+                  onPress={async () => {
+                    setStudyMedium('English');
+                    try {
+                      await saveProfile({ medium: 'ENGLISH' });
+                    } catch {
+                      showAlert('Could not update', 'Failed to save study medium.');
+                    }
+                  }}
+                >
+                  <Text
+                    className={`font-manrope-bold text-[11px] ${studyMedium === 'English' ? 'text-white' : 'text-textSecondary'}`}
+                  >
+                    English
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  className={`px-2.5 py-1 rounded-lg ${studyMedium === 'Telugu' ? 'bg-primary' : ''}`}
+                  activeOpacity={0.8}
+                  onPress={async () => {
+                    setStudyMedium('Telugu');
+                    try {
+                      await saveProfile({ medium: 'TELUGU' });
+                    } catch {
+                      showAlert('Could not update', 'Failed to save study medium.');
+                    }
+                  }}
+                >
+                  <Text
+                    className={`font-manrope-bold text-[11px] ${studyMedium === 'Telugu' ? 'text-white' : 'text-textSecondary'}`}
+                  >
+                    తెలుగు
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Daily Study Goal */}
+            <View className="p-4 border-b border-border">
+              <View className="flex-row items-center gap-3 mb-2.5">
+                <MaterialIcons name="timer" size={20} color={Colors.primary} />
+                <View>
+                  <Text className="font-manrope-bold text-[13px] text-textPrimary">Daily Study Goal</Text>
+                  <Text className="font-manrope-medium text-[11px] text-textSecondary mt-0.5">Target daily learning time</Text>
+                </View>
+              </View>
+              <View className="flex-row gap-2 mt-1">
+                {['15 mins', '30 mins', '45 mins', '60 mins'].map((goal) => {
+                  const isSelected = selectedStudyGoal === goal;
+                  return (
+                    <TouchableOpacity
+                      key={goal}
+                      className={`flex-1 py-2 rounded-xl items-center border ${
+                        isSelected ? 'bg-primary border-primary shadow-xs' : 'bg-white border-border'
+                      }`}
+                      activeOpacity={0.8}
+                      onPress={() => handleSelectStudyGoal(goal)}
+                    >
+                      <Text
+                        className={`font-manrope-bold text-[11px] ${
+                          isSelected ? 'text-white' : 'text-textSecondary'
+                        }`}
+                      >
+                        {goal}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+
+            {/* Offline Content Cache */}
+            <View className="flex-row items-center justify-between p-4">
+              <View className="flex-row items-center gap-3 flex-1">
+                <MaterialIcons name="offline-pin" size={20} color={Colors.primary} />
+                <View>
+                  <Text className="font-manrope-bold text-[13px] text-textPrimary">Offline Content Cache</Text>
+                  <Text className="font-manrope-medium text-[11px] text-textSecondary mt-0.5">Cached curriculum for offline reading</Text>
+                </View>
+              </View>
+              <Switch
+                value={offlineSync}
+                onValueChange={setOfflineSync}
+                trackColor={{ false: Colors.border, true: Colors.primaryLight }}
+                thumbColor={offlineSync ? Colors.primary : Colors.white}
+              />
+            </View>
+          </View>
+        </View>
+
+        {/* Help & Support Group */}
+        <View className="gap-2">
+          <Text className="font-manrope-extrabold text-lg text-textPrimary tracking-tight">Help & Support</Text>
+
+          <View className="bg-white rounded-2xl border border-border overflow-hidden shadow-sm">
+            <TouchableOpacity
+              className="flex-row items-center justify-between p-4"
+              activeOpacity={0.8}
+              onPress={() => navigation.navigate('ContactUs')}
+              accessibilityRole="button"
+              accessibilityLabel="Contact us and school help desk"
+            >
+              <View className="flex-row items-center gap-3 flex-1">
+                <View className="w-9 h-9 rounded-xl bg-palePeach items-center justify-center">
+                  <MaterialIcons name="support-agent" size={20} color={Colors.primary} />
+                </View>
+                <View className="flex-1">
+                  <Text className="font-manrope-bold text-[13px] text-textPrimary">Contact Us & Help Desk</Text>
+                  <Text className="font-manrope-medium text-[11px] text-textSecondary mt-0.5">
+                    File a complaint, report app issues or contact the school office
+                  </Text>
+                </View>
+              </View>
+              <MaterialIcons name="chevron-right" size={22} color={Colors.textMuted} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Account Actions / Sign Out */}
+        <View className="gap-2">
+          <TouchableOpacity
+            className="flex-row items-center justify-center p-3.5 rounded-2xl bg-red-50 border border-red-200 gap-2 shadow-xs"
+            onPress={() => setShowSignOutModal(true)}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Sign out of student account"
+          >
+            <MaterialIcons name="logout" size={18} color="#DC2626" />
+            <Text className="font-manrope-bold text-sm text-red-600">Sign Out</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* App Info & Board Compliance */}
+        <View className="items-center py-2 gap-1">
+          <Text className="font-manrope-bold text-xs text-textSecondary">Vidya Learning App v1.2.0</Text>
+          <Text className="font-manrope-medium text-[10px] text-textMuted">
+            Aligned with Andhra Pradesh SCERT Curriculum
+          </Text>
+        </View>
+      </ScrollView>
+
+      {/* Device Photo Picker Modal */}
+      <Modal
+        visible={showAvatarModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowAvatarModal(false)}
+      >
+        <View className="flex-1 justify-end bg-black/50">
+          <View className="bg-white rounded-t-[32px] p-6 border-t border-border shadow-2xl">
+            {/* Modal Header */}
+            <View className="flex-row items-center justify-between pb-4 border-b border-border">
+              <View>
+                <Text className="font-manrope-extrabold text-xl text-textPrimary tracking-tight">
+                  Profile Photo
+                </Text>
+                <Text className="font-manrope-medium text-xs text-textSecondary mt-0.5">
+                  Select a photo from your device or camera
+                </Text>
+              </View>
+              <TouchableOpacity
+                className="w-9 h-9 rounded-full bg-border/50 items-center justify-center"
+                onPress={() => setShowAvatarModal(false)}
+              >
+                <MaterialIcons name="close" size={20} color={Colors.textPrimary} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Current Preview */}
+            <View className="items-center py-5">
+              <View className="relative">
+                <Image
+                  source={
+                    profile?.avatarUrl
+                      ? { uri: profile.avatarUrl }
+                      : require('../../assets/app-images/avatar.png')
+                  }
+                  className="w-24 h-24 rounded-full border-4 border-primary/20 shadow-md"
+                  style={{ width: 96, height: 96, borderRadius: 48 }}
+                />
+                <View className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-primary items-center justify-center border-2 border-white">
+                  <MaterialIcons name="camera-alt" size={14} color="#ffffff" />
+                </View>
+              </View>
+              <Text className="font-manrope-bold text-sm text-textPrimary mt-3">
+                {profile?.firstName && profile?.lastName
+                  ? `${profile.firstName} ${profile.lastName}`
+                  : profile?.displayName || 'Student'}
+              </Text>
+              <Text className="font-manrope-medium text-[11px] text-textMuted">
+                {profile?.avatarUrl ? 'Custom Device Photo' : 'Default Student Icon'}
+              </Text>
+            </View>
+
+            {/* Device Source Options */}
+            <View className="gap-3 pt-2 pb-6">
+              <TouchableOpacity
+                className="flex-row items-center p-4 rounded-2xl bg-primary/10 border border-primary/30"
+                onPress={pickImageFromDevice}
+                activeOpacity={0.8}
+              >
+                <View className="w-12 h-12 rounded-xl bg-primary items-center justify-center mr-3.5 shadow-sm">
+                  <MaterialIcons name="photo-library" size={24} color="#ffffff" />
+                </View>
+                <View className="flex-1">
+                  <Text className="font-manrope-bold text-sm text-textPrimary">
+                    Choose from Gallery
+                  </Text>
+                  <Text className="font-manrope-medium text-xs text-textSecondary mt-0.5">
+                    Select a photo from your device storage
+                  </Text>
+                </View>
+                <MaterialIcons name="chevron-right" size={22} color={Colors.textMuted} />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                className="flex-row items-center p-4 rounded-2xl bg-gray-50 border border-border"
+                onPress={takePhotoWithCamera}
+                activeOpacity={0.8}
+              >
+                <View className="w-12 h-12 rounded-xl bg-primaryDark items-center justify-center mr-3.5 shadow-sm">
+                  <MaterialIcons name="photo-camera" size={24} color="#ffffff" />
+                </View>
+                <View className="flex-1">
+                  <Text className="font-manrope-bold text-sm text-textPrimary">
+                    Take Photo with Camera
+                  </Text>
+                  <Text className="font-manrope-medium text-xs text-textSecondary mt-0.5">
+                    Capture a new picture using your camera
+                  </Text>
+                </View>
+                <MaterialIcons name="chevron-right" size={22} color={Colors.textMuted} />
+              </TouchableOpacity>
+
+              {profile?.avatarUrl ? (
+                <TouchableOpacity
+                  className="flex-row items-center justify-center py-3 rounded-2xl border border-red-200 bg-red-50/60 mt-1"
+                  onPress={handleResetToDefault}
+                  activeOpacity={0.8}
+                >
+                  <MaterialIcons name="delete-outline" size={18} color="#DC2626" />
+                  <Text className="font-manrope-bold text-xs text-red-600 ml-1.5">
+                    Remove Custom Photo & Use Default
+                  </Text>
+                </TouchableOpacity>
+              ) : null}
+
+              <TouchableOpacity
+                className="py-3 rounded-2xl items-center justify-center bg-gray-100 mt-1"
+                onPress={() => setShowAvatarModal(false)}
+                activeOpacity={0.8}
+              >
+                <Text className="font-manrope-bold text-xs text-textSecondary">Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Cross-Platform Sign Out Confirmation Modal */}
+      <Modal
+        visible={showSignOutModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowSignOutModal(false)}
+      >
+        <View className="flex-1 items-center justify-center bg-black/50 px-6">
+          <View className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl border border-border gap-4">
+            <View className="w-14 h-14 rounded-2xl bg-red-100 items-center justify-center mx-auto">
+              <MaterialIcons name="logout" size={28} color="#DC2626" />
+            </View>
+            <View className="items-center gap-1.5">
+              <Text className="font-manrope-extrabold text-xl text-textPrimary text-center">
+                Sign Out
+              </Text>
+              <Text className="font-manrope-medium text-xs text-textSecondary text-center leading-relaxed">
+                Are you sure you want to sign out of your Vidya student account?
+              </Text>
+            </View>
+            <View className="flex-row gap-3 pt-2">
+              <TouchableOpacity
+                className="flex-1 py-3.5 rounded-xl bg-surfaceSoft border border-border items-center justify-center"
+                onPress={() => setShowSignOutModal(false)}
+                activeOpacity={0.8}
+              >
+                <Text className="font-manrope-bold text-sm text-textSecondary">Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className="flex-1 py-3.5 rounded-xl bg-red-600 items-center justify-center shadow-xs"
+                onPress={async () => {
+                  setShowSignOutModal(false);
+                  await logout();
+                }}
+                activeOpacity={0.85}
+              >
+                <Text className="font-manrope-bold text-sm text-white">Sign Out</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <BottomNav activeTab="Profile" navigation={navigation} />
+    </View>
+  );
+};

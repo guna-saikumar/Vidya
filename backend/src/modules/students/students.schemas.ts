@@ -1,0 +1,212 @@
+import { z } from "zod";
+
+const id = z.string().trim().min(1).max(120);
+
+/** Optional free text; `null` / empty string clears the value. */
+const optText = (max: number) => z.string().trim().max(max).nullish();
+
+/** Case-insensitive enum normalised to UPPERCASE (e.g. "male" → "MALE"). */
+const upperEnum = <const T extends readonly [string, ...string[]]>(values: T) =>
+  z
+    .string()
+    .trim()
+    .toUpperCase()
+    .pipe(z.enum(values as unknown as [string, ...string[]]));
+
+const nameText = (min: number, max: number, label: string) =>
+  z
+    .string()
+    .trim()
+    .min(min, `${label} must have at least ${min} character(s)`)
+    .max(max, `${label} cannot exceed ${max} characters`)
+    .regex(/^[A-Za-z\s]+$/, `${label} can only contain letters and spaces`);
+
+const optNameText = (max: number, label: string) =>
+  z
+    .string()
+    .trim()
+    .max(max, `${label} cannot exceed ${max} characters`)
+    .refine(
+      (v) => !v || /^[A-Za-z\s.]*$/.test(v),
+      `${label} can only contain letters, spaces, and dots`
+    )
+    .nullish();
+
+const optRollNumber = z
+  .string()
+  .trim()
+  .max(40, "Roll number cannot exceed 40 characters")
+  .refine(
+    (v) => !v || /^[A-Za-z0-9\-_]+$/.test(v),
+    "Roll number can only contain letters, numbers, and hyphens"
+  )
+  .nullish();
+
+const isoDate = z
+  .string()
+  .trim()
+  .transform((v) => (v.includes("T") ? v.slice(0, 10) : v))
+  .pipe(
+    z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Expected YYYY-MM-DD")
+      .refine((v) => {
+        const d = new Date(`${v}T00:00:00Z`);
+        if (Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== v) {
+          return false;
+        }
+        const now = Date.now();
+        if (d.getTime() > now) return false;
+        const ageYears = (now - d.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+        return ageYears >= 5 && ageYears <= 25;
+      }, "Date of birth must be a valid date and student age must be between 5 and 25 years")
+  );
+
+const mobile10 = z
+  .union([z.string(), z.number()])
+  .nullish()
+  .transform((v) => {
+    if (v === null || v === undefined) return null;
+    const s = String(v).trim();
+    return s.length === 0 ? null : s;
+  })
+  .pipe(
+    z
+      .string()
+      .regex(
+        /^[6-9]\d{9}$|^\d{10}$/,
+        "Phone number must contain exactly 10 digits and numbers only"
+      )
+      .nullable()
+  );
+
+const mediumEnum = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .transform((v) => {
+    if (v.includes("TELUGU")) return "TELUGU";
+    if (v.includes("URDU")) return "URDU";
+    if (v.includes("ENGLISH")) return "ENGLISH";
+    return v;
+  })
+  .pipe(z.enum(["ENGLISH", "TELUGU", "URDU"]))
+  .nullish();
+
+/** Grade 6–10 (string or number on the wire). */
+const grade = z
+  .union([z.string(), z.number()])
+  .transform((v) => String(v).trim())
+  .pipe(z.string().regex(/^(?:[6-9]|10)$/, "Grade must be 6-10"));
+
+/**
+ * Onboarding fields matching frontend forms exactly (4 steps):
+ *  1. Personal (firstName, lastName, gender, dob)
+ *  2. Location & School (district, location / villageCity, schoolName)
+ *  3. Academic (classId, grade, section, medium, rollNumber)
+ *  4. Parent Details (fatherName, motherName, parentPhone)
+ */
+const onboardingShape = {
+  // Step 1 — Personal
+  firstName: nameText(2, 50, "First name"),
+  lastName: nameText(1, 50, "Last name"),
+  gender: upperEnum(["MALE", "FEMALE", "OTHER"]),
+  dob: isoDate.optional(),
+  dateOfBirth: isoDate.optional(),
+
+  // Step 2 — Location & School
+  district: optText(120),
+  villageCity: optText(120),
+  location: optText(120),
+  schoolName: optText(200),
+
+  // Step 3 — Academic
+  classId: id.nullish(),
+  grade,
+  section: upperEnum(["A", "B", "C", "D"]).nullish(),
+  medium: mediumEnum,
+  rollNumber: optRollNumber,
+
+  // Step 4 — Parent Details
+  fatherName: optNameText(80, "Father name"),
+  motherName: optNameText(80, "Mother name"),
+  parentPhone: mobile10,
+  studyGoalMinutes: z.number().int().min(15).max(360).nullish(),
+} as const;
+
+export const updateOnboardingSchema = z
+  .object(onboardingShape)
+  .transform((data) => {
+    const effDob = data.dob ?? data.dateOfBirth;
+    return {
+      ...data,
+      dob: effDob,
+      dateOfBirth: effDob,
+    };
+  })
+  .superRefine((data, ctx) => {
+    if (!data.dob) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["dob"],
+        message: "Date of birth (dob or dateOfBirth) is required",
+      });
+    }
+  });
+
+/** PATCH: every onboarding field optional. */
+export const updateProfileSchema = z.object(onboardingShape).partial();
+
+export const updateSettingsSchema = z
+  .object({
+    language: z.enum(["en", "te"]).optional(),
+    notificationsEnabled: z.boolean().optional(),
+  })
+  .refine(
+    (v) => v.language !== undefined || v.notificationsEnabled !== undefined,
+    "Provide language and/or notificationsEnabled"
+  );
+
+export const upsertProgressSchema = z.object({
+  progressPercent: z.number().int().min(0).max(100),
+  completed: z.boolean(),
+  sectionId: id.optional(),
+  completedSections: z.array(id).optional(),
+});
+
+export const bookmarkTypeSchema = z.enum(["chapter", "section", "formula"]);
+export type BookmarkType = z.infer<typeof bookmarkTypeSchema>;
+
+export const createBookmarkSchema = z
+  .object({
+    chapterId: id,
+    sectionId: id.nullish(),
+    // Optional for backwards compatibility; the service infers it when omitted.
+    type: bookmarkTypeSchema.optional(),
+    title: z.string().trim().min(1).max(200).nullish(),
+    subtitle: z.string().trim().max(200).nullish(),
+    previewText: z.string().trim().max(2000).nullish(),
+  })
+  .superRefine((value, ctx) => {
+    // Never silently turn a malformed bookmark into a different type.
+    if (value.type === "section" && !value.sectionId) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["sectionId"],
+        message: "sectionId is required for section bookmarks",
+      });
+    }
+    if (value.type === "chapter" && value.sectionId) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["sectionId"],
+        message: "Chapter bookmarks cannot target a section",
+      });
+    }
+  });
+
+export type UpdateOnboardingInput = z.infer<typeof updateOnboardingSchema>;
+export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+export type UpdateSettingsInput = z.infer<typeof updateSettingsSchema>;
+export type UpsertProgressInput = z.infer<typeof upsertProgressSchema>;
+export type CreateBookmarkInput = z.infer<typeof createBookmarkSchema>;

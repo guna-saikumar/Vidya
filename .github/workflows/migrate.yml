@@ -1,0 +1,37 @@
+name: Database migrate
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: sql-migrate
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    name: sql migrate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: true
+
+      - name: Apply SQL migrations
+        run: pnpm --dir backend/db migrate
+        env:
+          # Prefer discrete fields when set; DATABASE_URL remains a Neon-friendly fallback.
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}

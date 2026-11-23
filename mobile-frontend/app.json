@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "vidya-learning-app",
+    "slug": "vidya-learning-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Vidya needs camera access so you can take a photo for your student profile picture.",
+        "NSPhotoLibraryUsageDescription": "Vidya needs photo library access so you can choose a profile picture from your device."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "CAMERA",
+        "READ_MEDIA_IMAGES",
+        "READ_MEDIA_VISUAL_USER_SELECTED"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Vidya needs camera access so you can take a photo for your student profile picture.",
+          "photosPermission": "Vidya needs photo library access so you can choose a profile picture from your device."
+        }
+      ],
+      "expo-status-bar"
+    ]
+  }
+}

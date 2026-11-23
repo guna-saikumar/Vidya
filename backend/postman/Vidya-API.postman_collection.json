@@ -1,0 +1,1475 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "name": "Vidya API",
+    "description": "# Vidya API (student, `/api/v1`)\n\nLocal: `http://localhost:4000` or your LAN IP from `npm start`.\n\n## Setup\n1. Set `studentPassword` from the seed (`StudentDemo1!`) — **do not commit secrets**.\n2. Run **Auth → login** — `studentToken` / `refreshToken` auto-save.\n3. Set `chapterId`, `sectionId`, `classId`, `subjectId`, `schoolId`, `notificationId` from list responses\n   (seed examples below).\n4. After editing YAML, run `npm run postman:export`.\n\n## Surface\nHealth, Auth, Students (onboarding, profile, avatar, settings, progress, bookmarks),\nSchools, Curriculum, Notifications.\n\n## Docs\n- Swagger UI: `{{baseUrl}}/docs`\n- OpenAPI JSON: `{{baseUrl}}/docs-json`",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000"
+    },
+    {
+      "key": "studentEmail",
+      "value": "student@vidya.test"
+    },
+    {
+      "key": "studentPassword",
+      "value": ""
+    },
+    {
+      "key": "studentToken",
+      "value": ""
+    },
+    {
+      "key": "refreshToken",
+      "value": ""
+    },
+    {
+      "key": "studentUserId",
+      "value": ""
+    },
+    {
+      "key": "classId",
+      "value": "class-8"
+    },
+    {
+      "key": "subjectId",
+      "value": "c8-telugu"
+    },
+    {
+      "key": "chapterId",
+      "value": "c8-tel-ch1"
+    },
+    {
+      "key": "sectionId",
+      "value": "c8-tel-ch1-s1"
+    },
+    {
+      "key": "schoolId",
+      "value": "school-vzg-001"
+    },
+    {
+      "key": "notificationId",
+      "value": ""
+    },
+    {
+      "key": "bookmarkId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "01. Health & Docs",
+      "item": [
+        {
+          "name": "GET /health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Liveness probe."
+          },
+          "description": "Liveness probe."
+        },
+        {
+          "name": "GET /health/db",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health/db",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health",
+                "db"
+              ]
+            },
+            "description": "Database connectivity probe."
+          },
+          "description": "Database connectivity probe."
+        },
+        {
+          "name": "GET /docs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/docs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "docs"
+              ]
+            },
+            "description": "Swagger UI (HTML)."
+          },
+          "description": "Swagger UI (HTML)."
+        },
+        {
+          "name": "GET /docs-json",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/docs-json",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "docs-json"
+              ]
+            },
+            "description": "OpenAPI JSON."
+          },
+          "description": "OpenAPI JSON."
+        }
+      ]
+    },
+    {
+      "name": "02. Auth",
+      "item": [
+        {
+          "name": "POST /api/v1/auth/login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Student login. Saves `studentToken` and `refreshToken`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{studentEmail}}\",\n  \"password\": \"{{studentPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "Student login. Saves `studentToken` and `refreshToken`.",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.accessToken) pm.collectionVariables.set('studentToken', json.accessToken);",
+                  "  if (json.refreshToken) pm.collectionVariables.set('refreshToken', json.refreshToken);",
+                  "  if (json.user) pm.collectionVariables.set('studentUserId', json.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/v1/auth/refresh",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "Rotate the refresh token (the old one is revoked). Saves both tokens.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "Rotate the refresh token (the old one is revoked). Saves both tokens.",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.accessToken) pm.collectionVariables.set('studentToken', json.accessToken);",
+                  "  if (json.refreshToken) pm.collectionVariables.set('refreshToken', json.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/v1/auth/logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Revoke the refresh token.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "description": "Revoke the refresh token."
+        },
+        {
+          "name": "GET /api/v1/auth/me",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Session check: `{ user: { id, email }, isOnboarded }`.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Session check: `{ user: { id, email }, isOnboarded }`."
+        }
+      ]
+    },
+    {
+      "name": "03. Students",
+      "item": [
+        {
+          "name": "GET /api/v1/students/me/profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/students/me/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "students",
+                "me",
+                "profile"
+              ]
+            },
+            "description": "Full student profile.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Full student profile."
+        },
+        {
+          "name": "PUT /api/v1/students/me/onboarding",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/students/me/onboarding",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "students",
+                "me",
+                "onboarding"
+              ]
+            },
+            "description": "Submit the 4-step onboarding wizard.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Meera\",\n  \"lastName\": \"Iyer\",\n  \"gender\": \"FEMALE\",\n  \"dob\": \"2014-05-12\",\n  \"aadharNumber\": \"123456789012\",\n  \"bloodGroup\": \"O+\",\n  \"casteCategory\": \"BC\",\n  \"doorNo\": \"4-5\",\n  \"street\": \"Main Street\",\n  \"villageCity\": \"Tirupati\",\n  \"mandal\": \"Tirupati Rural\",\n  \"district\": \"Tirupati\",\n  \"state\": \"Andhra Pradesh\",\n  \"pincode\": \"517502\",\n  \"schoolId\": \"school-ctr-001\",\n  \"schoolName\": \"ZPHS Tirupati Rural\",\n  \"schoolCode\": \"28220100606\",\n  \"classId\": \"class-7\",\n  \"grade\": \"7\",\n  \"section\": \"B\",\n  \"medium\": \"TELUGU\",\n  \"rollNumber\": \"12\",\n  \"admissionNumber\": \"ADM-2026-0077\",\n  \"fatherName\": \"R Iyer\",\n  \"motherName\": \"S Iyer\",\n  \"parentPhone\": \"9876543210\",\n  \"guardianPhone\": \"9876543211\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Submit the 4-step onboarding wizard."
+        },
+        {
+          "name": "PATCH /api/v1/students/me/profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/students/me/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "students",
+                "me",
+                "profile"
+              ]
+            },
+            "description": "Partial profile update.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"section\": \"A\",\n  \"guardianPhone\": \"9000000000\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Partial profile update."
+        },
+        {
+          "name": "PATCH /api/v1/students/me/settings",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/students/me/settings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "students",
+                "me",
+                "settings"
+              ]
+            },
+            "description": "Language (`en`|`te`) and notifications toggle.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"language\": \"te\",\n  \"notificationsEnabled\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Language (`en`|`te`) and notifications toggle."
+        },
+        {
+          "name": "POST /api/v1/students/me/avatar",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/students/me/avatar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "students",
+                "me",
+                "avatar"
+              ]
+            },
+            "description": "Upload profile photo (multipart, field `file`, JPEG/PNG/WebP/GIF, max 5 MB).",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Upload profile photo (multipart, field `file`, JPEG/PNG/WebP/GIF, max 5 MB)."
+        },
+        {
+          "name": "DELETE /api/v1/students/me/avatar",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/students/me/avatar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "students",
+                "me",
+                "avatar"
+              ]
+            },
+            "description": "Remove profile photo.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Remove profile photo."
+        },
+        {
+          "name": "GET /api/v1/students/me/progress",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/students/me/progress",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "students",
+                "me",
+                "progress"
+              ]
+            },
+            "description": "`{ overallPercent, chapters: { [chapterId]: {...} } }`.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "`{ overallPercent, chapters: { [chapterId]: {...} } }`."
+        },
+        {
+          "name": "PUT /api/v1/students/me/progress/:chapterId",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/students/me/progress/{{chapterId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "students",
+                "me",
+                "progress",
+                "{{chapterId}}"
+              ]
+            },
+            "description": "Update chapter reading % / completion.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"progressPercent\": 60,\n  \"completed\": false,\n  \"sectionId\": \"{{sectionId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Update chapter reading % / completion."
+        },
+        {
+          "name": "GET /api/v1/students/me/bookmarks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/students/me/bookmarks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "students",
+                "me",
+                "bookmarks"
+              ]
+            },
+            "description": "List bookmarks.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "List bookmarks."
+        },
+        {
+          "name": "POST /api/v1/students/me/bookmarks",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/students/me/bookmarks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "students",
+                "me",
+                "bookmarks"
+              ]
+            },
+            "description": "Bookmark a chapter or section. Saves `bookmarkId`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"chapterId\": \"{{chapterId}}\",\n  \"sectionId\": \"{{sectionId}}\",\n  \"previewText\": \"Key idea…\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Bookmark a chapter or section. Saves `bookmarkId`.",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  if (json.bookmark && json.bookmark.id) pm.collectionVariables.set('bookmarkId', json.bookmark.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE /api/v1/students/me/bookmarks/:bookmarkId",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/students/me/bookmarks/{{bookmarkId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "students",
+                "me",
+                "bookmarks",
+                "{{bookmarkId}}"
+              ]
+            },
+            "description": "Remove bookmark by id.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Remove bookmark by id."
+        },
+        {
+          "name": "DELETE /api/v1/students/me/bookmarks/by-section/:sectionId",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/students/me/bookmarks/by-section/{{sectionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "students",
+                "me",
+                "bookmarks",
+                "by-section",
+                "{{sectionId}}"
+              ]
+            },
+            "description": "Remove bookmark(s) by section id.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Remove bookmark(s) by section id."
+        }
+      ]
+    },
+    {
+      "name": "04. Schools",
+      "item": [
+        {
+          "name": "GET /api/v1/schools",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/schools?q=zphs&district=&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "schools"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "zphs"
+                },
+                {
+                  "key": "district",
+                  "value": ""
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Search schools (`q`, `district`, `limit`).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Search schools (`q`, `district`, `limit`)."
+        },
+        {
+          "name": "GET /api/v1/schools/:id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/schools/{{schoolId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "schools",
+                "{{schoolId}}"
+              ]
+            },
+            "description": "School detail.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "School detail."
+        }
+      ]
+    },
+    {
+      "name": "05. Curriculum",
+      "item": [
+        {
+          "name": "GET /api/v1/curriculum/classes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/curriculum/classes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "curriculum",
+                "classes"
+              ]
+            },
+            "description": "List classes.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "List classes."
+        },
+        {
+          "name": "GET /api/v1/curriculum/classes/:classId/subjects",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/curriculum/classes/{{classId}}/subjects",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "curriculum",
+                "classes",
+                "{{classId}}",
+                "subjects"
+              ]
+            },
+            "description": "Subjects for a class.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Subjects for a class."
+        },
+        {
+          "name": "GET /api/v1/curriculum/subjects/:subjectId",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/curriculum/subjects/{{subjectId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "curriculum",
+                "subjects",
+                "{{subjectId}}"
+              ]
+            },
+            "description": "Subject with chapter index.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Subject with chapter index."
+        },
+        {
+          "name": "GET /api/v1/curriculum/chapters/:chapterId",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/curriculum/chapters/{{chapterId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "curriculum",
+                "chapters",
+                "{{chapterId}}"
+              ]
+            },
+            "description": "Chapter with sections and `pdfUrl`.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Chapter with sections and `pdfUrl`."
+        },
+        {
+          "name": "GET /api/v1/curriculum/sections/:sectionId",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/curriculum/sections/{{sectionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "curriculum",
+                "sections",
+                "{{sectionId}}"
+              ]
+            },
+            "description": "Section reading content.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Section reading content."
+        }
+      ]
+    },
+    {
+      "name": "06. Notifications",
+      "item": [
+        {
+          "name": "GET /api/v1/notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notifications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "notifications"
+              ]
+            },
+            "description": "List notifications (`?unread=true` optional).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "List notifications (`?unread=true` optional)."
+        },
+        {
+          "name": "GET /api/v1/notifications/:id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notifications/{{notificationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "notifications",
+                "{{notificationId}}"
+              ]
+            },
+            "description": "Notification detail.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Notification detail."
+        },
+        {
+          "name": "PATCH /api/v1/notifications/:id/read",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notifications/{{notificationId}}/read",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "notifications",
+                "{{notificationId}}",
+                "read"
+              ]
+            },
+            "description": "Mark as read.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Mark as read."
+        },
+        {
+          "name": "POST /api/v1/notifications/read-all",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notifications/read-all",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "notifications",
+                "read-all"
+              ]
+            },
+            "description": "Mark all as read.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Mark all as read."
+        }
+      ]
+    },
+    {
+      "name": "07. Doubts",
+      "item": [
+        {
+          "name": "GET /api/v1/chapters/:chapterId/doubts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/chapters/c10-m-ch1/doubts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "chapters",
+                "c10-m-ch1",
+                "doubts"
+              ]
+            },
+            "description": "List doubts for a chapter (`?filter=all|unanswered|mine`, `?q=search`).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "List doubts for a chapter (`?filter=all|unanswered|mine`, `?q=search`)."
+        },
+        {
+          "name": "POST /api/v1/chapters/:chapterId/doubts",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/chapters/c10-m-ch1/doubts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "chapters",
+                "c10-m-ch1",
+                "doubts"
+              ]
+            },
+            "description": "Ask a doubt for a chapter (optionally tied to a section).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Does HCF × LCM = product also work for three numbers?\",\n  \"body\": \"In the theorem we multiply HCF and LCM of two numbers to get their product. Does it hold for three numbers?\",\n  \"sectionId\": \"c10-m-ch1-s1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Ask a doubt for a chapter (optionally tied to a section).",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  if (json && json.id) pm.collectionVariables.set('doubtId', json.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/v1/doubts/:doubtId",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/doubts/{{doubtId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "doubts",
+                "{{doubtId}}"
+              ]
+            },
+            "description": "Get one doubt thread with answers.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Get one doubt thread with answers."
+        },
+        {
+          "name": "POST /api/v1/doubts/:doubtId/answers",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/doubts/{{doubtId}}/answers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "doubts",
+                "{{doubtId}}",
+                "answers"
+              ]
+            },
+            "description": "Post an answer to a doubt thread.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"Yes, only for two numbers. The pairing breaks with three numbers.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Post an answer to a doubt thread.",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  if (json && json.id) pm.collectionVariables.set('answerId', json.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/v1/doubts/:doubtId/upvote",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/doubts/{{doubtId}}/upvote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "doubts",
+                "{{doubtId}}",
+                "upvote"
+              ]
+            },
+            "description": "Toggle upvote on a doubt thread.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Toggle upvote on a doubt thread."
+        },
+        {
+          "name": "POST /api/v1/doubts/:doubtId/answers/:answerId/helpful",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/doubts/{{doubtId}}/answers/{{answerId}}/helpful",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "doubts",
+                "{{doubtId}}",
+                "answers",
+                "{{answerId}}",
+                "helpful"
+              ]
+            },
+            "description": "Toggle helpful vote on an answer.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Toggle helpful vote on an answer."
+        },
+        {
+          "name": "POST /api/v1/doubts/:doubtId/resolve",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/doubts/{{doubtId}}/resolve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "doubts",
+                "{{doubtId}}",
+                "resolve"
+              ]
+            },
+            "description": "Mark doubt resolved (asker only), optionally accepting an answer.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"acceptedAnswerId\": \"{{answerId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{studentToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "description": "Mark doubt resolved (asker only), optionally accepting an answer."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "name": "@vidya/root",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node backend/scripts/start.mjs",
+    "start:app": "node backend/scripts/start.mjs --app",
+    "db": "node backend/scripts/db-web.mjs",
+    "dev:db": "node backend/scripts/db-web.mjs",
+    "db:web": "node backend/scripts/db-web.mjs",
+    "db:psql": "node backend/scripts/db-psql.mjs",
+    "db:migrate": "pnpm --dir backend/db migrate",
+    "db:seed": "pnpm --dir backend/db seed",
+    "backend:ngrok": "node backend/scripts/backend-ngrok.mjs",
+    "postman:export": "python3 backend/scripts/export-postman-collection.py",
+    "dev:frontend": "cd mobile-frontend && npx expo start --lan",
+    "dev:backend": "cd backend && pnpm dev",
+    "dev:mobile": "cd mobile-frontend && npx expo start --lan",
+    "dev:student-mobile": "cd mobile-frontend && npx expo start --lan",
+    "dev:web": "pnpm --dir web-frontend dev",
+    "build:web": "pnpm --dir web-frontend build",
+    "dev:web-frontend": "pnpm --dir web-frontend dev",
+    "build:web-frontend": "pnpm --dir web-frontend build",
+    "dev:web-app": "pnpm --dir web-frontend dev",
+    "build:web-app": "pnpm --dir web-frontend build",
+    "dev:api": "cd backend && pnpm dev",
+    "docker:up": "bash backend/scripts/dev-up.sh",
+    "docker:down": "bash backend/scripts/dev-down.sh",
+    "docker:logs": "bash backend/scripts/dev-logs.sh",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "build": "turbo build"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "turbo": "^2.11.10",
+    "typescript": "~6.0.3"
+  },
+  "packageManager": "pnpm@8.15.8",
+  "dependencies": {
+    "@neon/config": "^1.9.3",
+    "@neon/env": "^1.6.4"
+  },
+  "pnpm": {
+    "overrides": {
+      "fastify": "5.12.8",
+      "nodemailer": "10.2.1",
+      "uuid": "11.1.1",
+      "postcss-selector-parser": "7.1.7",
+      "js-yaml@^5.0.0": "5.5.0",
+      "js-yaml@~5": "5.5.0",
+      "fast-uri@^3.0.0": "3.1.9",
+      "fast-uri@^4.0.0": "4.2.3",
+      "node-forge": "1.4.3",
+      "follow-redirects": "1.16.3",
+      "minimatch@>=7.0.0": "11.0.9"
+    },
+    "neverBuiltDependencies": [
+      "bcrypt"
+    ]
+  }
+}

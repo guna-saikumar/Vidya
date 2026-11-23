@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "strictPropertyInitialization": false,
+    "useDefineForClassFields": false
+  },
+  "include": [
+    "mobile-frontend/**/*",
+    "web-frontend/**/*",
+    "backend/**/*",
+    "packages/**/*"
+  ],
+  "exclude": ["backend/db/sql/seed.ts", "backend/db/sql/migrate.ts"]
+}

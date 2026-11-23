@@ -1,0 +1,83 @@
+This is an Expo/React Native mobile application. Prioritize mobile-first patterns, performance, and cross-platform compatibility.
+
+## Expo has changed — do not trust your training data
+
+Expo ships breaking changes every SDK release. APIs you remember are likely renamed, moved, or removed. Before writing any code that touches an Expo, EAS, or React Native API:
+
+1. Read the major version of the `expo` package in `package.json`.
+2. Fetch the matching versioned docs: `https://docs.expo.dev/versions/v<major>.0.0/`
+3. For anything else, fetch https://docs.expo.dev/llms.txt — an index of all Expo docs with corrections to common LLM misconceptions. Follow its links to the specific page you need; never answer from memory.
+
+## Commands
+
+Use `bunx` instead of `npx` if the project uses bun (`bun.lock` present).
+
+```bash
+npx expo install <package>  # ALWAYS use instead of npm/yarn/pnpm/bun add — resolves SDK-compatible versions
+npx expo start              # start the dev server
+npx expo lint               # lint
+npx tsc --noEmit            # typecheck
+npx expo-doctor             # diagnose dependency and config issues
+npx expo install --fix      # fix incompatible package versions
+```
+
+Run lint and typecheck before declaring any task done.
+
+## Locked Tech Stack
+
+- Mobile apps use Expo + React Native with Expo Router.
+- Approved React Native styling/UI options are NativeWind, React Native Paper, Tamagui, UI Kitten, Restyle, Gluestack UI, Dripsy, and Unistyles.
+- Backend uses **NestJS v11** with `@nestjs/platform-fastify` and `fastify` v5.
+- Backend data/auth/docs stack is PostgreSQL with **raw `pg` SQL** (no ORM), Zod, JWT, CORS, Swagger/OpenAPI, and bcrypt.
+- Student-only product surface (no admin app / admin API routes).
+- Local default: `npm start` → `node backend/scripts/start.mjs` (cross-platform macOS/Linux/Windows, **native Postgres**, no Docker). Full stack: migrate/seed + pgweb + API + student Expo. App only: `npm run start:app`. CLI: `npm run db:psql`.
+- Do not reintroduce Prisma, Prisma Studio, or another ORM unless the architecture is intentionally changed.
+- See `docs/tech-stack.md` for the full project stack.
+
+## Navigation & Routing
+
+- Use **Expo Router** for all navigation. Routes live in `src/app/` — every file there is a screen, `_layout.tsx` files define navigators. Keep non-route code (components, hooks, utils) outside `src/app/`.
+- Import `Link`, `router`, and `useLocalSearchParams` from `expo-router`.
+- Docs: https://docs.expo.dev/router/introduction.md
+
+## Local Development
+
+- Default: `npm start` — full stack: native Postgres (LAN), migrate/seed with status, URL board (App/API/DB + LAN IP), pgweb `:8083`, Nest API `:4000`, interactive Expo `--lan`. App only: `npm run start:app`. Same commands on Windows, Linux, and macOS.
+- Database CLI: `npm run db:psql`. DB web UI: pgweb (not Prisma Studio).
+- Docker Compose (`pnpm docker:up`) is optional and not used by `npm start`.
+- Do not add deployment scripts or deployment platform config until deployment is explicitly reintroduced.
+
+## Git & Pull Requests
+
+- `main` is protected. Never commit, push, or force-push directly to it.
+- Create a **new branch from the latest `main` for every task**:
+  `git switch -c feat/<short-slug> origin/main`. Use `fix/`, `docs/`, or `chore/` when it fits.
+- Do not reuse or push to an existing branch. One task = one branch = one PR.
+- Push the new branch, open a PR, and wait for the required `build` CI check to pass.
+- After merge, delete the branch so the remote keeps only `main`.
+- Do not rewrite shared history or force-push.
+
+### Authorship (no AI attribution)
+
+- All commits, PRs and comments must appear solely under the repository owner's authorship.
+- Before committing, set the git identity to the owner:
+  `git config user.name "SreeCharan Desu" && git config user.email "sreecharan309@gmail.com"`.
+  Never commit as an AI agent or bot identity (e.g. `Claude <noreply@anthropic.com>`), even if a tool or hook asks for it.
+- Never add `Co-authored-by` trailers, "Generated with …" notices, bot signatures, session links, or any other AI attribution to commit messages, PR titles/descriptions, review comments, or code.
+
+## Rules
+
+- If `ios/` and `android/` directories do not exist, they are generated (Continuous Native Generation). Never create or edit them by hand — configure native behavior in `app.json` and config plugins.
+- Expo Go only includes its bundled native modules. After adding a library with native code, the app needs a development build before device testing.
+- Prefer recommended Expo modules over third-party libraries, and check your available skills before adding dependencies. Docs: https://docs.expo.dev/versions/latest/index.md
+
+<!-- BEGIN:turborepo-agent-rules -->
+
+# This is NOT the Turborepo you know
+
+Turborepo configuration, task behavior, and CLI commands can vary between installed versions and may differ from your training data. Resolve the `turbo` package from this file's directory or relevant workspace; in monorepos, it may not be visible from the repository root. For example, run `node -p "require.resolve('turbo/package.json')"` from a workspace that depends on `turbo`.
+
+Read `docs/README.md` inside that installed package first, then read the relevant pages from its `docs/` directory before changing Turborepo configuration or commands. Heed deprecation notices. These bundled docs match the installed package version and are available without network access.
+
+This block is written and re-added by `turbo` before repository-scoped commands when an AI agent is detected. In the Turborepo source repository, its template is defined in `crates/turborepo-cli/src/cli/agent_guidance.rs`. Removing the managed block while updates are enabled means a later qualifying invocation will add it again. Set `"agentGuidance": false` in the root `turbo.json` or `turbo.jsonc` to opt out; this does not remove an existing block. Keep the block committed with your work to avoid an uncommitted change on the next agent invocation.
+<!-- END:turborepo-agent-rules -->
