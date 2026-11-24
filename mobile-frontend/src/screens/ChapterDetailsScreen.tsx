@@ -115,6 +115,7 @@ export const ChapterDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
         className="flex-1"
         contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 18, paddingBottom: 50, gap: 16 }}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {/* Chapter Header Block & Action Row (Arranged Below Header) */}
         <View className="bg-white rounded-2xl p-4 border border-border shadow-xs gap-3">

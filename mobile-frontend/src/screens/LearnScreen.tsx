@@ -58,6 +58,7 @@ export const LearnScreen: React.FC<Props> = ({ navigation }) => {
         className="flex-1"
         contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 18, paddingBottom: 48, gap: 20 }}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {/* Page Heading */}
         <PageIntro

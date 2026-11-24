@@ -46,8 +46,7 @@ export const RootNavigator: React.FC = () => {
       screenOptions={{
         headerShown: false,
         contentStyle: { backgroundColor: Colors.surface },
-        animation: 'slide_from_right',
-        animationDuration: 200,
+        animation: 'default',
       }}
     >
       {authLoading ? (
@@ -71,7 +70,7 @@ export const RootNavigator: React.FC = () => {
             <Stack.Screen
               name="StudentOnboarding"
               component={StudentOnboardingScreen}
-              options={{ animation: 'fade', animationDuration: 180 }}
+              options={{ animation: 'fade' }}
             />
             <Stack.Screen name="Home" component={DashboardScreen} />
           </Stack.Group>
@@ -84,29 +83,29 @@ export const RootNavigator: React.FC = () => {
             <Stack.Screen name="Profile" component={ProfileScreen} options={{ animation: 'none' }} />
 
             {/* Secondary Screens */}
-            <Stack.Screen name="MyLearning" component={MyLearningScreen} options={{ animation: 'slide_from_right', animationDuration: 200 }} />
-            <Stack.Screen name="Bookmarks" component={BookmarksScreen} options={{ animation: 'slide_from_right', animationDuration: 200 }} />
+            <Stack.Screen name="MyLearning" component={MyLearningScreen} />
+            <Stack.Screen name="Bookmarks" component={BookmarksScreen} />
 
             {/* Student Onboarding & Academic Details Editor */}
-            <Stack.Screen name="StudentOnboarding" component={StudentOnboardingScreen} options={{ animation: 'slide_from_bottom', animationDuration: 220 }} />
+            <Stack.Screen name="StudentOnboarding" component={StudentOnboardingScreen} options={{ animation: 'slide_from_bottom' }} />
 
             {/* Curriculum Screens - Snappy hardware-accelerated transitions */}
-            <Stack.Screen name="ClassSubjects" component={ClassSubjectsScreen} options={{ animation: 'slide_from_right', animationDuration: 200 }} />
-            <Stack.Screen name="SubjectIndex" component={SubjectIndexScreen} options={{ animation: 'slide_from_right', animationDuration: 200 }} />
-            <Stack.Screen name="ChapterDetails" component={ChapterDetailsScreen} options={{ animation: 'slide_from_right', animationDuration: 200 }} />
-            <Stack.Screen name="SectionDetails" component={SectionDetailsScreen} options={{ animation: 'slide_from_right', animationDuration: 200 }} />
+            <Stack.Screen name="ClassSubjects" component={ClassSubjectsScreen} />
+            <Stack.Screen name="SubjectIndex" component={SubjectIndexScreen} />
+            <Stack.Screen name="ChapterDetails" component={ChapterDetailsScreen} />
+            <Stack.Screen name="SectionDetails" component={SectionDetailsScreen} />
 
             {/* Doubts */}
-            <Stack.Screen name="Doubts" component={DoubtsScreen} options={{ animation: 'slide_from_right', animationDuration: 200 }} />
-            <Stack.Screen name="DoubtThread" component={DoubtThreadScreen} options={{ animation: 'slide_from_right', animationDuration: 200 }} />
-            <Stack.Screen name="AskDoubt" component={AskDoubtScreen} options={{ animation: 'slide_from_bottom', animationDuration: 220 }} />
+            <Stack.Screen name="Doubts" component={DoubtsScreen} />
+            <Stack.Screen name="DoubtThread" component={DoubtThreadScreen} />
+            <Stack.Screen name="AskDoubt" component={AskDoubtScreen} options={{ animation: 'slide_from_bottom' }} />
 
             {/* Notifications */}
-            <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ animation: 'slide_from_right', animationDuration: 200 }} />
-            <Stack.Screen name="NotificationDetail" component={NotificationDetailScreen} options={{ animation: 'slide_from_right', animationDuration: 200 }} />
+            <Stack.Screen name="Notifications" component={NotificationsScreen} />
+            <Stack.Screen name="NotificationDetail" component={NotificationDetailScreen} />
 
             {/* Support & Contact Us */}
-            <Stack.Screen name="ContactUs" component={ContactUsScreen} options={{ animation: 'slide_from_right', animationDuration: 200 }} />
+            <Stack.Screen name="ContactUs" component={ContactUsScreen} />
           </Stack.Group>
         )}
       </Stack.Navigator>
