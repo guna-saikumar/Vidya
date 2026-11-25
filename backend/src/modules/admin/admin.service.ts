@@ -175,23 +175,26 @@ export class AdminService {
     if (input.target === "student" && input.targetValue) {
       targetUserIds = [input.targetValue];
     } else if (input.target === "grade" && input.targetValue) {
-      const gradeStr = String(input.targetValue).trim();
-      const gradeDigits = gradeStr.replace(/\D/g, "");
+      const rawTarget = String(input.targetValue).trim();
+      const digits = rawTarget.replace(/\D/g, "");
       const { rows } = await this.db.query<{ userId: string }>(
-        `SELECT "userId" FROM "StudentProfile"
+        `SELECT DISTINCT "userId" FROM "StudentProfile"
          WHERE "grade" = $1
             OR "grade" = $2
             OR "grade" = ('Class ' || $2)
-            OR "activeClassId" = ('class-' || $2)`,
-        [gradeStr, gradeDigits || gradeStr]
+            OR "grade" = ('Class ' || $1)
+            OR "activeClassId" = $1
+            OR "activeClassId" = ('class-' || $2)
+            OR "activeClassId" = ('class-' || $1)`,
+        [rawTarget, digits || rawTarget]
       );
-      targetUserIds = rows.map((r) => r.userId);
+      targetUserIds = Array.from(new Set(rows.map((r) => r.userId).filter(Boolean)));
     } else {
       // All students
       const { rows } = await this.db.query<{ id: string }>(
         `SELECT "id" FROM "User" WHERE "role" = 'STUDENT'`
       );
-      targetUserIds = rows.map((r) => r.id);
+      targetUserIds = Array.from(new Set(rows.map((r) => r.id).filter(Boolean)));
     }
 
     if (targetUserIds.length === 0) {
@@ -268,7 +271,11 @@ export class AdminService {
       actionLabel: r.actionLabel,
       recipientCount: parseInt(r.recipientCount, 10),
       readCount: parseInt(r.readCount, 10),
-      sentAt: r.latestSentAt.toISOString(),
+      sentAt: r.latestSentAt instanceof Date
+        ? r.latestSentAt.toISOString()
+        : r.latestSentAt
+          ? new Date(r.latestSentAt).toISOString()
+          : new Date().toISOString(),
     }));
   }
 

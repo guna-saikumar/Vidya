@@ -35,6 +35,7 @@ export const AlertsNotificationsPage = () => {
   // List State
   const [broadcasts, setBroadcasts] = useState([]);
   const [loadingList, setLoadingList] = useState(true);
+  const [availableClasses, setAvailableClasses] = useState([]);
 
   // Notification feedback
   const [feedback, setFeedback] = useState(null);
@@ -43,6 +44,17 @@ export const AlertsNotificationsPage = () => {
   const notify = useCallback((type, message) => {
     setFeedback({ type, message });
     setTimeout(() => setFeedback(null), 5000);
+  }, []);
+
+  useEffect(() => {
+    adminService
+      .getClasses()
+      .then((data) => {
+        if (data && data.length > 0) {
+          setAvailableClasses(data);
+        }
+      })
+      .catch((err) => console.warn('Could not load classes for alert targeting:', err));
   }, []);
 
   const loadBroadcasts = useCallback(() => {
@@ -224,11 +236,21 @@ export const AlertsNotificationsPage = () => {
                     setForm((p) => ({ ...p, targetValue: e.target.value }))
                   }
                 >
-                  <option value="6">Class 6 Students</option>
-                  <option value="7">Class 7 Students</option>
-                  <option value="8">Class 8 Students</option>
-                  <option value="9">Class 9 Students</option>
-                  <option value="10">Class 10 Students</option>
+                  {availableClasses.length > 0 ? (
+                    availableClasses.map((cls) => (
+                      <option key={cls.id} value={String(cls.grade)}>
+                        {cls.title} Students (Class {cls.grade})
+                      </option>
+                    ))
+                  ) : (
+                    <>
+                      <option value="6">Class 6 Students</option>
+                      <option value="7">Class 7 Students</option>
+                      <option value="8">Class 8 Students</option>
+                      <option value="9">Class 9 Students</option>
+                      <option value="10">Class 10 Students</option>
+                    </>
+                  )}
                 </select>
               </div>
             )}

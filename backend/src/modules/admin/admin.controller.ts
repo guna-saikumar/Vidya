@@ -65,7 +65,7 @@ export class AdminController {
   }
 
   // ---- Notifications / Alerts -------------------------------------------
-  @Post("notifications/broadcast")
+  @Post(["notifications/broadcast", "notifications"])
   @ApiOperation({ summary: "Broadcast an alert or notification to students" })
   broadcastNotification(
     @Body(new ZodValidationPipe(broadcastNotificationSchema))
@@ -74,7 +74,7 @@ export class AdminController {
     return this.admin.broadcastNotification(body);
   }
 
-  @Get("notifications")
+  @Get(["notifications/broadcast", "notifications"])
   @ApiOperation({ summary: "List broadcast notifications sent to students" })
   listNotifications() {
     return this.admin.listBroadcastNotifications();
