@@ -5,11 +5,11 @@ import { DbModule } from "./db/db.module";
 import { loadRootEnv, rootEnvFilePaths } from "./env";
 import { MailerModule } from "./mailer/mailer.module";
 import { CurriculumModule } from "./modules/curriculum/curriculum.module";
-import { DoubtsModule } from "./modules/doubts/doubts.module";
 import { HealthModule } from "./modules/health/health.module";
 import { NotificationsModule } from "./modules/notifications/notifications.module";
 import { SchoolsModule } from "./modules/schools/schools.module";
 import { StudentsModule } from "./modules/students/students.module";
+import { StudyMaterialsModule } from "./modules/study-materials/study-materials.module";
 import { SupportModule } from "./modules/support/support.module";
 
 loadRootEnv();
@@ -18,8 +18,8 @@ loadRootEnv();
  * Root Nest module — feature modules live under `src/modules/*`.
  * Cross-cutting auth/db/mailer stay at `src/{auth,db,mailer}`.
  *
- * API surface (all under `/api/v1`, plus `/health`):
- * auth · students · schools · curriculum · notifications.
+ * API surface (aliases without `/v1` are also available, plus `/health`):
+ * auth · students · schools · curriculum · notifications · study-materials.
  */
 @Module({
   imports: [
@@ -34,9 +34,9 @@ loadRootEnv();
     StudentsModule,
     SchoolsModule,
     CurriculumModule,
-    DoubtsModule,
     NotificationsModule,
     SupportModule,
+    StudyMaterialsModule,
   ],
 })
 export class AppModule {}

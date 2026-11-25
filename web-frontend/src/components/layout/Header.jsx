@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   Home,
+  FileText,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useProfile } from '../../hooks/useProfile';
@@ -59,12 +60,6 @@ export const Header = () => {
     setMenuOpen(false);
     await logout();
     navigate('/login');
-  };
-
-  const handleGoToLanding = async () => {
-    setMenuOpen(false);
-    await logout();
-    navigate('/');
   };
 
   return (
@@ -160,14 +155,23 @@ export const Header = () => {
                 <span>Settings</span>
               </Link>
 
-              <button
-                type="button"
-                onClick={handleGoToLanding}
+              <Link
+                to="/"
+                onClick={() => setMenuOpen(false)}
                 className={styles.menuItem}
               >
                 <Home size={16} />
                 <span>Landing Page</span>
-              </button>
+              </Link>
+
+              <Link
+                to="/admin/materials"
+                onClick={() => setMenuOpen(false)}
+                className={styles.menuItem}
+              >
+                <FileText size={16} />
+                <span>Manage Study Materials</span>
+              </Link>
 
               <div className={styles.menuDivider} />
 

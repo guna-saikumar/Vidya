@@ -8,10 +8,12 @@ import {
   MapPin,
   Send,
   CheckCircle2,
+  Tag,
   HelpCircle,
   School,
   Headphones,
   FileQuestion,
+  GraduationCap,
 } from 'lucide-react';
 import styles from './ContactPage.css';
 
@@ -83,7 +85,6 @@ export const ContactPage = () => {
         category,
         subject,
         message,
-        email,
         createdAt: new Date().toISOString(),
         status: 'open',
       };

@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getSubjectById, getClassById } from '../services/curriculumService';
-import { useLearningProgress } from '../hooks/useLearningProgress';
+import { getStoredProgress } from '../services/progressService';
 import {
   ArrowLeft,
   BookOpen,
@@ -11,6 +11,8 @@ import {
   Layers,
   GraduationCap,
   Play,
+  Sparkles,
+  FileText,
 } from 'lucide-react';
 import styles from './SubjectDetailsPage.css';
 
@@ -20,7 +22,7 @@ export const SubjectDetailsPage = () => {
 
   const schoolClass = useMemo(() => getClassById(classId), [classId]);
   const subject = useMemo(() => getSubjectById(classId, subjectId), [classId, subjectId]);
-  const { progressMap } = useLearningProgress();
+  const progressMap = useMemo(() => getStoredProgress(), []);
 
   if (!subject) {
     return (
@@ -114,6 +116,13 @@ export const SubjectDetailsPage = () => {
                 <Play size={15} fill="currentColor" />
                 <span>Continue: Chapter {nextChapter.order} - {nextChapter.title}</span>
               </button>
+              <Link
+                to={`/courses/${classId}/${subject.id}/materials`}
+                className={styles.pdfLinkBtn}
+              >
+                <FileText size={15} />
+                <span>Study Materials (PDF)</span>
+              </Link>
             </div>
           )}
         </div>

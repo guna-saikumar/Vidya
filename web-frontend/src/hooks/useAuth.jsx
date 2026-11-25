@@ -1,6 +1,5 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { loginStudent, validateSession, logoutStudent } from '../services/authService';
-import { storage } from '../lib/storage';
 
 const AuthContext = createContext(undefined);
 
@@ -28,29 +27,15 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     const result = await loginStudent(email, password);
     setUser(result.user);
-    return result;
   };
 
   const logout = async () => {
-    try {
-      await logoutStudent();
-    } finally {
-      setUser(null);
-      storage.clearAuth();
-    }
+    await logoutStudent();
+    setUser(null);
   };
 
-  const setIsOnboarded = useCallback((onboarded) => {
-    setUser((prev) => {
-      if (!prev) return prev;
-      const updated = { ...prev, isOnboarded: !!onboarded };
-      storage.setUser(updated);
-      return updated;
-    });
-  }, []);
-
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, setIsOnboarded }}>
+    <AuthContext.Provider value={{ user, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
@@ -61,3 +46,4 @@ export function useAuth() {
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');
   return ctx;
 }
+

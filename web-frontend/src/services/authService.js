@@ -6,28 +6,14 @@ export async function loginStudent(email, password) {
     email,
     password,
   });
-  const { accessToken, refreshToken, isOnboarded: loginIsOnboarded } = res.data;
+  const { accessToken, refreshToken } = res.data;
   storage.setAccessToken(accessToken);
   storage.setRefreshToken(refreshToken);
 
   // hydrate user + onboarding status
-  let user = res.data.user || { email };
-  let isOnboarded = loginIsOnboarded;
-  try {
-    const meRes = await apiClient.get('/api/v1/auth/me');
-    if (meRes.data?.user) {
-      user = meRes.data.user;
-    }
-    if (typeof meRes.data?.isOnboarded === 'boolean') {
-      isOnboarded = meRes.data.isOnboarded;
-    }
-  } catch {
-    // fallback to login response
-  }
-
-  const fullUser = { ...user, isOnboarded: !!isOnboarded };
-  storage.setUser(fullUser);
-  return { user: fullUser, isOnboarded: !!isOnboarded };
+  const meRes = await apiClient.get('/api/v1/auth/me');
+  storage.setUser(meRes.data.user);
+  return { user: meRes.data.user, isOnboarded: meRes.data.isOnboarded };
 }
 
 export async function validateSession() {
@@ -35,12 +21,8 @@ export async function validateSession() {
   if (!token) return null;
   try {
     const meRes = await apiClient.get('/api/v1/auth/me');
-    const u = {
-      ...meRes.data.user,
-      isOnboarded: !!meRes.data.isOnboarded,
-    };
-    storage.setUser(u);
-    return u;
+    storage.setUser(meRes.data.user);
+    return meRes.data.user;
   } catch {
     // try refresh once
     const refreshToken = storage.getRefreshToken();
@@ -52,12 +34,8 @@ export async function validateSession() {
         storage.setAccessToken(r.data.accessToken);
         storage.setRefreshToken(r.data.refreshToken);
         const meRes = await apiClient.get('/api/v1/auth/me');
-        const u = {
-          ...meRes.data.user,
-          isOnboarded: !!meRes.data.isOnboarded,
-        };
-        storage.setUser(u);
-        return u;
+        storage.setUser(meRes.data.user);
+        return meRes.data.user;
       } catch {
         storage.clearAuth();
         return null;
@@ -81,3 +59,4 @@ export async function logoutStudent() {
 }
 
 export { extractErrorMessage };
+

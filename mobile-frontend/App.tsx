@@ -33,7 +33,6 @@ import { Provider } from 'react-redux';
 import { store } from './src/store';
 import { AuthProvider } from './src/hooks/useAuth';
 import { RootNavigator } from './src/navigation/RootNavigator';
-import { ToastContainer } from './src/components/common/Toast';
 import Colors from './src/constants/colors';
 
 /** Desktop browsers get a phone-sized frame instead of a stretched layout. */
@@ -76,16 +75,10 @@ export default function App() {
         <AuthProvider>
           {showPhoneFrame ? (
             <View style={styles.backdrop}>
-              <View style={styles.frame}>
-                {navigator}
-                <ToastContainer />
-              </View>
+              <View style={styles.frame}>{navigator}</View>
             </View>
           ) : (
-            <>
-              {navigator}
-              <ToastContainer />
-            </>
+            navigator
           )}
         </AuthProvider>
       </Provider>

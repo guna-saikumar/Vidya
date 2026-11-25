@@ -17,9 +17,9 @@ This document is the source of truth for implementation tasks across the Vidya m
 - **Zod**, **JWT**, **Swagger/OpenAPI**, **bcrypt**.
 - Student-only API surface (admin app and admin routes removed), versioned under `/api/v1`:
   auth (login/refresh/logout/me), students (onboarding, profile, avatar, settings, progress, bookmarks),
-  schools, curriculum, doubts (list, ask, answer, upvote, helpful, resolve), notifications; plus `/health` and `/health/db`.
+  schools, curriculum, notifications; plus `/health` and `/health/db`.
 - Auth: short-lived access JWT (15m) + rotating refresh tokens (30d, sha256-hashed in `"RefreshToken"`).
-- Avatar uploads via `@fastify/multipart`, stored under `backend/uploads/avatars` and served at `/uploads/*`.
+- Avatar uploads via `@fastify/multipart`, stored under `apps/api/uploads/avatars` and served at `/uploads/*`.
 
 ## Local Runtime
 
@@ -30,7 +30,7 @@ npm start              # full stack
 npm run start:app      # student Expo only
 ```
 
-`npm start` (`backend/scripts/start.mjs`) with step status + a URL board (LAN IP + localhost):
+`npm start` (`scripts/start.mjs`) with step status + a URL board (LAN IP + localhost):
 
 1. Native Postgres (LAN bind when conf is writable)
 2. SQL migrate + seed (logged)

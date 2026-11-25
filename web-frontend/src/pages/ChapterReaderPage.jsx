@@ -1,7 +1,13 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getChapterById } from '../services/curriculumService';
-import { useLearningProgress } from '../hooks/useLearningProgress';
+import {
+  getStoredProgress,
+  saveChapterProgress,
+  getStoredBookmarks,
+  addBookmark,
+  removeBookmark,
+} from '../services/progressService';
 import {
   ArrowLeft,
   CheckCircle2,
@@ -27,24 +33,9 @@ export const ChapterReaderPage = () => {
     [classId, subjectId, chapterId]
   );
 
-  const {
-    progressMap,
-    bookmarks,
-    toggleChapterComplete,
-    toggleSectionComplete,
-    recordVisit,
-    addBookmark,
-    removeBookmark,
-  } = useLearningProgress();
-
+  const [progressMap, setProgressMap] = useState(() => getStoredProgress());
+  const [bookmarks, setBookmarks] = useState(() => getStoredBookmarks());
   const [selectedQuizIdx, setSelectedQuizIdx] = useState(null);
-
-  // Record visit to update lastAccessed in PostgreSQL and sync Continue Learning with mobile
-  useEffect(() => {
-    if (classId && subjectId && chapterId) {
-      void recordVisit(classId, subjectId, chapterId);
-    }
-  }, [classId, subjectId, chapterId, recordVisit]);
 
   const chapterProgress = progressMap[chapterId];
   const isCompleted = Boolean(chapterProgress?.completed);
@@ -63,13 +54,40 @@ export const ChapterReaderPage = () => {
 
   const handleToggleComplete = async () => {
     if (!chapter) return;
+    const willBeCompleted = !isCompleted;
     const allSectionIds = chapter.sections.map((s) => s.id);
-    await toggleChapterComplete(classId, subjectId, chapter.id, allSectionIds);
+
+    const updated = await saveChapterProgress({
+      chapterId: chapter.id,
+      subjectId,
+      classId,
+      progressPercent: willBeCompleted ? 100 : 0,
+      completed: willBeCompleted,
+      lastAccessed: Date.now(),
+      completedSections: willBeCompleted ? allSectionIds : [],
+    });
+    setProgressMap({ ...updated });
   };
 
   const handleToggleSection = async (sectionId) => {
     if (!chapter) return;
-    await toggleSectionComplete(classId, subjectId, chapter.id, sectionId, chapter.sections.length);
+    const isDone = completedSections.includes(sectionId);
+    const nextSections = isDone
+      ? completedSections.filter((id) => id !== sectionId)
+      : [...completedSections, sectionId];
+
+    const percent = Math.min(100, Math.round((nextSections.length / Math.max(1, chapter.sections.length)) * 100));
+
+    const updated = await saveChapterProgress({
+      chapterId: chapter.id,
+      subjectId,
+      classId,
+      progressPercent: percent,
+      completed: percent === 100,
+      lastAccessed: Date.now(),
+      completedSections: nextSections,
+    });
+    setProgressMap({ ...updated });
   };
 
   const handleToggleBookmark = async () => {
@@ -77,10 +95,11 @@ export const ChapterReaderPage = () => {
     if (isBookmarked) {
       const match = bookmarks.find((b) => b.chapterId === chapterId && b.type === 'chapter');
       if (match) {
-        await removeBookmark(match.id);
+        const updated = await removeBookmark(match.id);
+        setBookmarks([...updated]);
       }
     } else {
-      await addBookmark({
+      const updated = await addBookmark({
         title: chapter.title,
         subtitle: `${subject.name} • Chapter ${chapter.order}`,
         type: 'chapter',
@@ -89,6 +108,7 @@ export const ChapterReaderPage = () => {
         classId,
         previewText: chapter.description || (chapter.sections[0]?.content?.slice(0, 160) + '...'),
       });
+      setBookmarks([...updated]);
     }
   };
 
