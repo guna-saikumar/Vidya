@@ -52,7 +52,7 @@ export const uploadStudyMaterial = async ({ classId, subjectId, title, file, onP
   form.append('file', file);
 
   const res = await adminClient.post(`${ADMIN_API}/study-materials`, form, {
-    headers: { ...adminHeaders(), 'Content-Type': 'multipart/form-data' },
+    headers: adminHeaders(),
     timeout: 0,
     onUploadProgress: (event) => {
       if (!onProgress || !event.total) return;

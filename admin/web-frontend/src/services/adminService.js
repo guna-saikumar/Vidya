@@ -42,7 +42,6 @@ export const adminService = {
 
   async uploadStudyMaterial(formData, onProgress) {
     const res = await adminApiClient.post('/api/v1/admin/study-materials', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
       onUploadProgress: (evt) => {
         if (evt.total && onProgress) {
           onProgress(Math.round((evt.loaded * 100) / evt.total));
