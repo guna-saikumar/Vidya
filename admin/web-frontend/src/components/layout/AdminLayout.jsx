@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -12,7 +12,8 @@ import {
   ShieldCheck,
   Menu,
   X,
-  ExternalLink,
+  User,
+  ChevronUp,
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import styles from './AdminLayout.module.css';
@@ -32,6 +33,18 @@ export const AdminLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const profileRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setProfileMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -39,6 +52,7 @@ export const AdminLayout = () => {
   };
 
   const getPageTitle = () => {
+    if (location.pathname === '/profile') return 'Admin Profile';
     const item = navItems.find((n) => n.path === location.pathname);
     return item ? item.label : 'Admin Portal';
   };
@@ -98,24 +112,97 @@ export const AdminLayout = () => {
           })}
         </nav>
 
-        <div className={styles.sidebarFooter}>
-          <div className={styles.adminUserCard}>
+        {/* Profile Section in Left Sidebar Footer */}
+        <div className={styles.sidebarFooter} ref={profileRef}>
+          {profileMenuOpen && (
+            <div className={styles.profileDropdownMenu} role="menu">
+              <div className={styles.profileMenuHeader}>
+                <div className={styles.profileMenuAvatar}>
+                  {adminUser?.name ? adminUser.name[0].toUpperCase() : 'A'}
+                </div>
+                <div className={styles.profileMenuMeta}>
+                  <span className={styles.profileMenuName}>
+                    {adminUser?.name || 'Academic Administrator'}
+                  </span>
+                  <span className={styles.profileMenuEmail}>
+                    {adminUser?.email || 'admin@vidya.test'}
+                  </span>
+                  <span className={styles.profileMenuRole}>
+                    {adminUser?.role || 'ADMIN'} &bull; AP SCERT
+                  </span>
+                </div>
+              </div>
+
+              <div className={styles.profileMenuDivider} />
+
+              <button
+                type="button"
+                className={styles.profileMenuItem}
+                onClick={() => {
+                  setProfileMenuOpen(false);
+                  setMobileMenuOpen(false);
+                  navigate('/profile');
+                }}
+              >
+                <User size={16} />
+                <span>Admin Profile</span>
+              </button>
+
+              <button
+                type="button"
+                className={styles.profileMenuItem}
+                onClick={() => {
+                  setProfileMenuOpen(false);
+                  setMobileMenuOpen(false);
+                  navigate('/settings');
+                }}
+              >
+                <Settings size={16} />
+                <span>Portal Settings</span>
+              </button>
+
+              <div className={styles.profileMenuDivider} />
+
+              <button
+                type="button"
+                className={`${styles.profileMenuItem} ${styles.profileMenuItemDanger}`}
+                onClick={() => {
+                  setProfileMenuOpen(false);
+                  handleLogout();
+                }}
+              >
+                <LogOut size={16} />
+                <span>Sign Out</span>
+              </button>
+            </div>
+          )}
+
+          <button
+            type="button"
+            className={`${styles.sidebarProfileButton} ${
+              profileMenuOpen ? styles.sidebarProfileButtonActive : ''
+            }`}
+            onClick={() => setProfileMenuOpen((prev) => !prev)}
+            aria-label="Admin Profile Menu"
+            aria-expanded={profileMenuOpen}
+          >
             <div className={styles.adminAvatarSmall}>
               {adminUser?.name ? adminUser.name[0].toUpperCase() : 'A'}
             </div>
             <div className={styles.adminUserCardMeta}>
-              <span className={styles.adminUserName}>{adminUser?.name || 'Administrator'}</span>
-              <span className={styles.adminUserEmail}>{adminUser?.email || 'admin@vidya.test'}</span>
+              <span className={styles.adminUserName}>
+                {adminUser?.name || 'Administrator'}
+              </span>
+              <span className={styles.adminUserEmail}>
+                {adminUser?.email || 'admin@vidya.test'}
+              </span>
             </div>
-          </div>
-
-          <button
-            onClick={handleLogout}
-            className={styles.logoutBtn}
-            title="Sign Out of Admin"
-          >
-            <LogOut size={16} />
-            <span>Sign Out</span>
+            <ChevronUp
+              size={16}
+              className={`${styles.profileChevron} ${
+                profileMenuOpen ? styles.profileChevronOpen : ''
+              }`}
+            />
           </button>
         </div>
       </aside>
@@ -139,7 +226,12 @@ export const AdminLayout = () => {
           </div>
 
           <div className={styles.headerRight}>
-            <div className={styles.adminUserBadge}>
+            <button
+              type="button"
+              className={styles.adminUserBadgeBtn}
+              onClick={() => navigate('/profile')}
+              title="View Admin Profile"
+            >
               <div className={styles.adminAvatar}>
                 {adminUser?.name ? adminUser.name[0].toUpperCase() : 'A'}
               </div>
@@ -147,7 +239,7 @@ export const AdminLayout = () => {
                 <span className={styles.adminName}>{adminUser?.name || 'Administrator'}</span>
                 <span className={styles.adminSchool}>{adminUser?.email || 'admin@vidya.test'}</span>
               </div>
-            </div>
+            </button>
           </div>
         </header>
 

@@ -11,6 +11,7 @@ import { StudentsManagementPage } from './pages/StudentsManagementPage';
 import { CurriculumClassesPage } from './pages/CurriculumClassesPage';
 import { SupportTicketsPage } from './pages/SupportTicketsPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { AdminProfilePage } from './pages/AdminProfilePage';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAdminAuth();
@@ -42,6 +43,7 @@ export const App = () => {
             <Route path="curriculum" element={<CurriculumClassesPage />} />
             <Route path="support" element={<SupportTicketsPage />} />
             <Route path="settings" element={<SettingsPage />} />
+            <Route path="profile" element={<AdminProfilePage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />
