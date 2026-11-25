@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Pressable, StyleProp, ViewStyle, Platform } from 'react-native';
+import { Pressable, StyleProp, ViewStyle, Platform } from 'react-native';
 import Colors from '../../constants/colors';
 
 interface HoverCardProps {
@@ -23,15 +23,6 @@ const HoverCardComponent: React.FC<HoverCardProps> = ({
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const isWeb = Platform.OS === 'web';
-
-  // If non-interactive on mobile, render plain View to avoid gesture responder touch delay
-  if (!onPress && !isWeb) {
-    return (
-      <View className={className} style={style}>
-        {children}
-      </View>
-    );
-  }
 
   return (
     <Pressable

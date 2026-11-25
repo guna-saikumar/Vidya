@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useLearningProgress } from '../hooks/useLearningProgress';
+import { getStoredBookmarks, removeBookmark } from '../services/progressService';
 import {
   Bookmark,
   Trash2,
@@ -14,12 +14,13 @@ import styles from './BookmarksPage.css';
 
 export const BookmarksPage = () => {
   const navigate = useNavigate();
-  const { bookmarks, removeBookmark } = useLearningProgress();
+  const [bookmarks, setBookmarks] = useState(() => getStoredBookmarks());
   const [filterType, setFilterType] = useState('all');
 
   const handleRemove = async (id, e) => {
     e.stopPropagation();
-    await removeBookmark(id);
+    const updated = await removeBookmark(id);
+    setBookmarks([...updated]);
   };
 
   const handleOpenBookmark = (bm) => {

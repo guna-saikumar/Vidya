@@ -13,35 +13,6 @@ const upperEnum = <const T extends readonly [string, ...string[]]>(values: T) =>
     .toUpperCase()
     .pipe(z.enum(values as unknown as [string, ...string[]]));
 
-const nameText = (min: number, max: number, label: string) =>
-  z
-    .string()
-    .trim()
-    .min(min, `${label} must have at least ${min} character(s)`)
-    .max(max, `${label} cannot exceed ${max} characters`)
-    .regex(/^[A-Za-z\s]+$/, `${label} can only contain letters and spaces`);
-
-const optNameText = (max: number, label: string) =>
-  z
-    .string()
-    .trim()
-    .max(max, `${label} cannot exceed ${max} characters`)
-    .refine(
-      (v) => !v || /^[A-Za-z\s.]*$/.test(v),
-      `${label} can only contain letters, spaces, and dots`
-    )
-    .nullish();
-
-const optRollNumber = z
-  .string()
-  .trim()
-  .max(40, "Roll number cannot exceed 40 characters")
-  .refine(
-    (v) => !v || /^[A-Za-z0-9\-_]+$/.test(v),
-    "Roll number can only contain letters, numbers, and hyphens"
-  )
-  .nullish();
-
 const isoDate = z
   .string()
   .trim()
@@ -52,14 +23,12 @@ const isoDate = z
       .regex(/^\d{4}-\d{2}-\d{2}$/, "Expected YYYY-MM-DD")
       .refine((v) => {
         const d = new Date(`${v}T00:00:00Z`);
-        if (Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== v) {
-          return false;
-        }
-        const now = Date.now();
-        if (d.getTime() > now) return false;
-        const ageYears = (now - d.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
-        return ageYears >= 5 && ageYears <= 25;
-      }, "Date of birth must be a valid date and student age must be between 5 and 25 years")
+        return (
+          !Number.isNaN(d.getTime()) &&
+          d.toISOString().slice(0, 10) === v &&
+          d.getTime() <= Date.now()
+        );
+      }, "Invalid date of birth")
   );
 
 const mobile10 = z
@@ -67,17 +36,11 @@ const mobile10 = z
   .nullish()
   .transform((v) => {
     if (v === null || v === undefined) return null;
-    const s = String(v).trim();
+    const s = String(v).replace(/\D/g, "");
     return s.length === 0 ? null : s;
   })
   .pipe(
-    z
-      .string()
-      .regex(
-        /^[6-9]\d{9}$|^\d{10}$/,
-        "Phone number must contain exactly 10 digits and numbers only"
-      )
-      .nullable()
+    z.string().regex(/^\d{10}$/, "Mobile number must contain exactly 10 digits.").nullable()
   );
 
 const mediumEnum = z
@@ -108,10 +71,10 @@ const grade = z
  */
 const onboardingShape = {
   // Step 1 — Personal
-  firstName: nameText(2, 50, "First name"),
-  lastName: nameText(1, 50, "Last name"),
+  firstName: z.string().trim().min(1).max(80),
+  lastName: z.string().trim().min(1).max(80),
   gender: upperEnum(["MALE", "FEMALE", "OTHER"]),
-  dob: isoDate.optional(),
+  dob: isoDate,
   dateOfBirth: isoDate.optional(),
 
   // Step 2 — Location & School
@@ -125,37 +88,19 @@ const onboardingShape = {
   grade,
   section: upperEnum(["A", "B", "C", "D"]).nullish(),
   medium: mediumEnum,
-  rollNumber: optRollNumber,
+  rollNumber: optText(40),
 
   // Step 4 — Parent Details
-  fatherName: optNameText(80, "Father name"),
-  motherName: optNameText(80, "Mother name"),
+  fatherName: optText(120),
+  motherName: optText(120),
   parentPhone: mobile10,
-  studyGoalMinutes: z.number().int().min(15).max(360).nullish(),
+  studyGoalMinutes: z.number().int().min(1).max(360).nullish(),
 } as const;
 
-export const updateOnboardingSchema = z
-  .object(onboardingShape)
-  .transform((data) => {
-    const effDob = data.dob ?? data.dateOfBirth;
-    return {
-      ...data,
-      dob: effDob,
-      dateOfBirth: effDob,
-    };
-  })
-  .superRefine((data, ctx) => {
-    if (!data.dob) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["dob"],
-        message: "Date of birth (dob or dateOfBirth) is required",
-      });
-    }
-  });
+export const updateOnboardingSchema = z.object(onboardingShape);
 
 /** PATCH: every onboarding field optional. */
-export const updateProfileSchema = z.object(onboardingShape).partial();
+export const updateProfileSchema = updateOnboardingSchema.partial();
 
 export const updateSettingsSchema = z
   .object({

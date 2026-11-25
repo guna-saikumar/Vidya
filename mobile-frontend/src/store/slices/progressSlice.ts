@@ -113,16 +113,6 @@ export const fetchProgressThunk = createAsyncThunk(
 // SAVE CHAPTER PROGRESS
 // --------------------------------------------------
 
-export interface SaveChapterProgressInput {
-  chapterId: string;
-  progressPercent: number;
-  completed: boolean;
-  sectionId?: string;
-  subjectId?: string;
-  classId?: string;
-  completedSections?: string[];
-}
-
 export const saveChapterProgressThunk = createAsyncThunk(
   'progress/saveChapterProgress',
   async (
@@ -133,28 +123,30 @@ export const saveChapterProgressThunk = createAsyncThunk(
       sectionId,
       subjectId = '',
       classId = '',
-      completedSections,
-    }: SaveChapterProgressInput,
+    }: {
+      chapterId: string;
+      progressPercent: number;
+      completed: boolean;
+      sectionId?: string;
+      subjectId?: string;
+      classId?: string;
+    },
     { getState }
   ) => {
-    const state = getState() as { progress: ProgressState };
-    const current = { ...state.progress.progressMap };
-    const previous = current[chapterId];
-
-    const finalCompletedSections = completedSections !== undefined
-      ? completedSections
-      : (previous?.completedSections || []);
-
     try {
       await studentsApi.updateProgress(chapterId, {
         progressPercent,
         completed,
         sectionId,
-        completedSections: finalCompletedSections,
       });
     } catch (error) {
       console.warn('API progress save failed:', error);
     }
+
+    const state = getState() as { progress: ProgressState };
+
+    const current = { ...state.progress.progressMap };
+    const previous = current[chapterId];
 
     const updated: ChapterProgress = {
       chapterId,
@@ -163,7 +155,7 @@ export const saveChapterProgressThunk = createAsyncThunk(
       progressPercent,
       completed,
       lastAccessed: Date.now(),
-      completedSections: finalCompletedSections,
+      completedSections: previous?.completedSections || [],
     };
 
     current[chapterId] = updated;

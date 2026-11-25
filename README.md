@@ -14,7 +14,7 @@ Student learning platform: Expo student app + NestJS (Fastify) API on Postgres, 
 | `web-frontend/` | Student web application (React, Vite, CSS Modules) |
 | `backend/` | Unified NestJS 11 + Fastify 5 API and PostgreSQL database engine (`backend/db/`) |
 
-More: [docs/architecture.md](docs/architecture.md), [docs/tech-stack.md](docs/tech-stack.md), [docs/repo-structure.md](docs/repo-structure.md)
+More: [docs/architecture.md](docs/architecture.md), [docs/tech-stack.md](docs/tech-stack.md), [docs/repo-structure.md](docs/repo-structure.md), [docs/study-materials.md](docs/study-materials.md)
 
 ## Stack
 
@@ -29,7 +29,7 @@ npm start              # full stack: Postgres + migrate/seed + API + Expo + pgwe
 npm run start:app      # student Expo only (uses API URL from existing .env)
 ```
 
-`npm start` auto-detects your Wi‑Fi IP, runs migrate + seed (with status steps), writes `.env` + `mobile-frontend/.env` / `.env.local`, and prints a URL board (LAN IP + localhost) for App / API / Docs / Database / DB UI. The Expo terminal stays interactive (QR + `i` / `a` / `w` / `r`).
+`npm start` auto-detects your Wi‑Fi IP, runs migrate + seed (with status steps), writes `.env` + `apps/student-mobile/.env` / `.env.local`, and prints a URL board (LAN IP + localhost) for App / API / Docs / Database / DB UI. The Expo terminal stays interactive (QR + `i` / `a` / `w` / `r`).
 
 **Postgres (one-time):**
 - macOS: `brew install postgresql@17` (also auto-installed by `npm start` when Homebrew is present)
@@ -48,32 +48,14 @@ On Apple networks, share URLs often use `YourMac.local` (Bonjour) so teammates n
 
 ```bash
 pnpm exec tsc --noEmit
-pnpm --dir backend test
-pnpm --dir mobile-frontend test
+pnpm --dir apps/api test
+pnpm --dir packages/auth test
+pnpm --dir apps/student-mobile test
 ```
 
 ## Env
 
 `npm start` writes `.env` with your LAN IP. See `.env.example`.
-
-## Contributing
-
-`main` is protected. Never commit, push, or force-push directly to it.
-
-1. Start from the latest `main` and create a **new branch for every task**:
-
-   ```bash
-   git switch main
-   git pull
-   git switch -c feat/<short-slug>
-   ```
-
-   Use the `fix/`, `docs/`, or `chore/` prefix when it fits.
-
-2. Push the branch and open a pull request. The required `build` check must pass.
-3. Squash-merge after review, then delete the branch.
-
-Do not reuse or push to an existing branch. One task = one branch = one PR.
 
 ## License
 

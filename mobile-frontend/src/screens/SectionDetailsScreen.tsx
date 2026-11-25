@@ -116,7 +116,6 @@ export const SectionDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
         className="flex-1"
         contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: 40, gap: 16 }}
         showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
       >
         {/* Topic metadata & Bookmark action */}
         <View className="flex-row items-center justify-between pb-1">

@@ -42,12 +42,6 @@ export const loginUserThunk = createAsyncThunk(
   'auth/loginUser',
   async ({ email, pass }: { email: string; pass: string }, { rejectWithValue }) => {
     try {
-      // Clear any prior cached profile/progress before authenticating the new email account
-      await AsyncStorage.multiRemove([
-        '@vidya_user_profile',
-        '@vidya_chapter_progress',
-      ]).catch(() => undefined);
-
       const loginRes = await authApi.login(email, pass);
       const { accessToken, refreshToken } = loginRes;
 
@@ -231,11 +225,6 @@ const authSlice = createSlice({
       state.token = null;
       state.user = null;
       state.error = action.payload as string;
-    });
-
-    // When onboarding setup is submitted, synchronize auth slice
-    builder.addCase('student/submitOnboarding/fulfilled', (state) => {
-      state.isOnboarded = true;
     });
 
     // check session

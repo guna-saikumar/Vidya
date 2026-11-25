@@ -64,7 +64,6 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
         className="flex-1"
         contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 20, paddingBottom: 50, gap: 24 }}
         showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
       >
         {/* Greeting */}
         <View className="pt-1">

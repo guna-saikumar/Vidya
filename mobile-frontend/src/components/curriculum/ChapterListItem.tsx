@@ -34,8 +34,7 @@ export const ChapterListItem: React.FC<ChapterListItemProps> = ({
       <TouchableOpacity
         className="flex-row items-start gap-3.5 p-[18px]"
         onPress={onPress}
-        activeOpacity={0.7}
-        delayPressIn={0}
+        activeOpacity={0.88}
       >
         {/* Chapter Number Badge matching Figma Make .chapter-number */}
         <View

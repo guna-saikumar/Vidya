@@ -6,4 +6,3 @@ export * from "./students/students";
 export * from "./schools/schools";
 export * from "./curriculum/curriculum";
 export * from "./notifications/notifications";
-export * from "./doubts/doubts";

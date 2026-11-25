@@ -1,9 +1,6 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { ErrorBoundary } from './components/common/ErrorBoundary';
-import { ToastProvider } from './components/common/Toast';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
-import { LearningProvider } from './hooks/useLearningProgress';
 import { AppLayout } from './components/layout/AppLayout';
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
@@ -17,11 +14,11 @@ import { BookmarksPage } from './pages/BookmarksPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { ContactPage } from './pages/ContactPage';
+import { AdminStudyMaterialsPage } from './pages/AdminStudyMaterialsPage';
+import { StudyMaterialsPage } from './pages/StudyMaterialsPage';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
-  const location = useLocation();
-
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-soft)' }}>
@@ -36,36 +33,24 @@ const ProtectedRoute = ({ children }) => {
       </div>
     );
   }
-
   if (!user) return <Navigate to="/login" replace />;
-
-  // Account-level check: If this student has NOT completed setup, gate to /onboarding
-  if (!user.isOnboarded && location.pathname !== '/onboarding') {
-    return <Navigate to="/onboarding" replace />;
-  }
-
-  // If this student has ALREADY completed setup, redirect away from /onboarding
-  if (user.isOnboarded && location.pathname === '/onboarding') {
-    return <Navigate to="/dashboard" replace />;
-  }
-
   return <>{children}</>;
 };
 
 export default function App() {
   return (
-    <ErrorBoundary>
-      <BrowserRouter>
-        <ToastProvider>
-          <AuthProvider>
-            <LearningProvider>
-              <Routes>
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
           {/* Public Landing & Marketing Pages */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/landing" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
 
-          {/* Student Onboarding (Student Setup Form) */}
+          {/* Admin PDF management (protected by ADMIN_TOKEN, not a student JWT) */}
+          <Route path="/admin/materials" element={<AdminStudyMaterialsPage />} />
+
+          {/* Student Onboarding */}
           <Route
             path="/onboarding"
             element={
@@ -86,6 +71,7 @@ export default function App() {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/courses" element={<CoursesPage />} />
             <Route path="/courses/:classId/:subjectId" element={<SubjectDetailsPage />} />
+            <Route path="/courses/:classId/:subjectId/materials" element={<StudyMaterialsPage />} />
             <Route path="/courses/:classId/:subjectId/:chapterId" element={<ChapterReaderPage />} />
             <Route path="/bookmarks" element={<BookmarksPage />} />
             <Route path="/profile" element={<ProfilePage />} />
@@ -95,10 +81,7 @@ export default function App() {
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Route>
         </Routes>
-      </LearningProvider>
-    </AuthProvider>
-  </ToastProvider>
-  </BrowserRouter>
-</ErrorBoundary>
-);
+      </AuthProvider>
+    </BrowserRouter>
+  );
 }
