@@ -175,10 +175,15 @@ export class AdminService {
     if (input.target === "student" && input.targetValue) {
       targetUserIds = [input.targetValue];
     } else if (input.target === "grade" && input.targetValue) {
-      const gradeNum = parseInt(input.targetValue, 10);
+      const gradeStr = String(input.targetValue).trim();
+      const gradeDigits = gradeStr.replace(/\D/g, "");
       const { rows } = await this.db.query<{ userId: string }>(
-        `SELECT "userId" FROM "StudentProfile" WHERE "grade" = $1`,
-        [gradeNum]
+        `SELECT "userId" FROM "StudentProfile"
+         WHERE "grade" = $1
+            OR "grade" = $2
+            OR "grade" = ('Class ' || $2)
+            OR "activeClassId" = ('class-' || $2)`,
+        [gradeStr, gradeDigits || gradeStr]
       );
       targetUserIds = rows.map((r) => r.userId);
     } else {
@@ -197,6 +202,9 @@ export class AdminService {
       };
     }
 
+    const validTypes = ["announcement", "alert", "system", "event", "achievement", "reminder"];
+    const notifType = validTypes.includes(input.type) ? input.type : "announcement";
+
     const batchId = newId();
     for (const userId of targetUserIds) {
       const notifId = `notif-${batchId}-${userId.slice(0, 8)}`;
@@ -212,7 +220,7 @@ export class AdminService {
           input.title,
           input.message,
           input.detailedBody || input.message,
-          input.type,
+          notifType,
           input.icon || "campaign",
           input.actionRoute || null,
           input.actionLabel || null,

@@ -1,9 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import {
-  getStoredNotifications,
-  markNotificationAsRead,
-  markAllNotificationsAsRead,
-} from '../services/progressService';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { notificationService } from '../services/notificationService';
 import {
   Bell,
   Sparkles,
@@ -12,6 +8,8 @@ import {
   CheckCheck,
   School,
   FileText,
+  AlertTriangle,
+  Loader2,
 } from 'lucide-react';
 import styles from './NotificationsPage.css';
 
@@ -31,19 +29,40 @@ const formatTime = (timestamp) => {
 };
 
 export const NotificationsPage = () => {
-  const [notifications, setNotifications] = useState(() => getStoredNotifications());
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState('all');
+
+  const loadNotifications = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await notificationService.getNotifications();
+      setNotifications(data || []);
+    } catch (err) {
+      console.warn('Could not load notifications:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadNotifications();
+  }, [loadNotifications]);
 
   const unreadCount = notifications.filter((n) => !n.isRead && !n.read).length;
 
-  const handleNotificationClick = (id) => {
-    const updated = markNotificationAsRead(id);
-    setNotifications([...updated]);
+  const handleNotificationClick = async (id) => {
+    const updated = await notificationService.markAsRead(id);
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, isRead: true, read: true } : n))
+    );
   };
 
-  const handleMarkAllRead = () => {
-    const updated = markAllNotificationsAsRead();
-    setNotifications([...updated]);
+  const handleMarkAllRead = async () => {
+    await notificationService.markAllAsRead();
+    setNotifications((prev) =>
+      prev.map((n) => ({ ...n, isRead: true, read: true }))
+    );
   };
 
   const filteredNotifications = useMemo(() => {
@@ -51,21 +70,31 @@ export const NotificationsPage = () => {
       return notifications.filter((n) => !n.isRead && !n.read);
     }
     if (filterType === 'academic') {
-      return notifications.filter((n) => n.type === 'announcement' || !n.type);
+      return notifications.filter(
+        (n) => n.type === 'announcement' || n.type === 'alert' || !n.type
+      );
     }
     if (filterType === 'reminders') {
-      return notifications.filter((n) => n.type === 'reminder' || n.type === 'achievement');
+      return notifications.filter(
+        (n) => n.type === 'reminder' || n.type === 'achievement' || n.type === 'event'
+      );
     }
     return notifications;
   }, [notifications, filterType]);
 
   const getIconConfig = (type) => {
     switch (type) {
+      case 'alert':
+        return {
+          icon: AlertTriangle,
+          label: 'Important Alert',
+        };
       case 'achievement':
         return {
           icon: Sparkles,
           label: 'Milestone',
         };
+      case 'event':
       case 'reminder':
         return {
           icon: Calendar,

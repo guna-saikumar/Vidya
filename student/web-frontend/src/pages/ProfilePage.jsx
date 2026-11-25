@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
+import { notificationService } from '../services/notificationService';
 import {
   User,
   GraduationCap,
@@ -19,6 +20,8 @@ import {
   AlertCircle,
   ChevronRight,
   ChevronLeft,
+  Bell,
+  Loader2,
 } from 'lucide-react';
 import styles from './ProfilePage.css';
 
@@ -66,6 +69,21 @@ const POPULAR_SCHOOLS = [
   'Bhashyam Educational Institution',
 ];
 
+const formatTime = (timestamp) => {
+  const time = typeof timestamp === 'string' ? new Date(timestamp).getTime() : timestamp;
+  const now = Date.now();
+  const diff = now - time;
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+
+  if (isNaN(diff) || minutes < 1) return 'Just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days === 1) return 'Yesterday';
+  return `${days}d ago`;
+};
+
 export const ProfilePage = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -73,6 +91,32 @@ export const ProfilePage = () => {
 
   const [savingGoal, setSavingGoal] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState(profile?.studyGoalMinutes || 45);
+
+  const [notifications, setNotifications] = useState([]);
+  const [notificationsLoading, setNotificationsLoading] = useState(true);
+
+  const loadNotifications = useCallback(async () => {
+    try {
+      setNotificationsLoading(true);
+      const data = await notificationService.getNotifications();
+      setNotifications(data || []);
+    } catch (err) {
+      console.warn('Could not load notifications for profile:', err);
+    } finally {
+      setNotificationsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadNotifications();
+  }, [loadNotifications]);
+
+  const handleNotificationClick = async (id) => {
+    await notificationService.markAsRead(id);
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, isRead: true, read: true } : n))
+    );
+  };
 
   // Single Edit Details Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -485,6 +529,72 @@ export const ProfilePage = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* ================= OFFICIAL BOARD BROADCASTS & ALERTS ================= */}
+      <div className={styles.sectionBlock} style={{ marginTop: '1.25rem' }}>
+        <div className={styles.sectionHeader}>
+          <div className={styles.sectionTitleGroup}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Bell size={18} color="var(--primary)" />
+              <h2 className={styles.sectionTitle}>Official Board Broadcasts & Alerts</h2>
+            </div>
+            <p className={styles.sectionSubtitle}>
+              Recent circulars, emergency alerts, and curriculum announcements delivered to your profile
+            </p>
+          </div>
+          <Link to="/notifications" className={styles.viewNotifsLink}>
+            <span>View All Notices</span>
+            <ChevronRight size={14} />
+          </Link>
+        </div>
+
+        {notificationsLoading ? (
+          <div className={styles.notifsLoadingBox}>
+            <Loader2 size={22} className={styles.spinner} />
+            <span>Loading recent bulletins...</span>
+          </div>
+        ) : notifications.length > 0 ? (
+          <div className={styles.profileNotifsList}>
+            {notifications.slice(0, 4).map((notif) => {
+              const isRead = Boolean(notif.isRead ?? notif.read);
+              return (
+                <div
+                  key={notif.id}
+                  onClick={() => handleNotificationClick(notif.id)}
+                  className={`${styles.profileNotifCard} ${!isRead ? styles.profileNotifUnread : ''}`}
+                >
+                  <div className={styles.profileNotifIconWrap}>
+                    {notif.type === 'alert' ? (
+                      <AlertCircle size={18} color="#b84040" />
+                    ) : (
+                      <Bell size={18} color="var(--primary)" />
+                    )}
+                  </div>
+                  <div className={styles.profileNotifContent}>
+                    <div className={styles.profileNotifTop}>
+                      <span className={styles.profileNotifTitle}>{notif.title}</span>
+                      <div className={styles.profileNotifMeta}>
+                        <span className={styles.profileNotifTime}>
+                          {formatTime(notif.createdAt)}
+                        </span>
+                        {!isRead && <span className={styles.profileNotifBadge}>NEW</span>}
+                      </div>
+                    </div>
+                    <p className={styles.profileNotifMsg}>
+                      {notif.message || notif.body}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className={styles.emptyNotifsBox}>
+            <Check size={18} color="var(--success)" />
+            <span>No alerts or circulars at this moment. You are up to date!</span>
+          </div>
+        )}
       </div>
 
       {/* Sign Out Action */}

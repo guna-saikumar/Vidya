@@ -6,8 +6,8 @@ import { getClassById, getSubjectsByClass } from '../services/curriculumService'
 import {
   getStoredProgress,
   getStoredBookmarks,
-  getStoredNotifications,
 } from '../services/progressService';
+import { notificationService } from '../services/notificationService';
 import {
   BookOpen,
   Bookmark,
@@ -36,7 +36,14 @@ export const DashboardPage = () => {
   const subjects = useMemo(() => getSubjectsByClass(activeClassId), [activeClassId]);
   const progressMap = useMemo(() => getStoredProgress(), []);
   const bookmarks = useMemo(() => getStoredBookmarks(), []);
-  const notifications = useMemo(() => getStoredNotifications(), []);
+  const [notifications, setNotifications] = useState([]);
+
+  useEffect(() => {
+    notificationService
+      .getNotifications()
+      .then((data) => setNotifications(data || []))
+      .catch((err) => console.warn('Dashboard notifications error:', err));
+  }, []);
 
   // Compute enrolled curriculum stats
   const { totalSubjects, totalChapters, completedChapters, progressPercent } = useMemo(() => {

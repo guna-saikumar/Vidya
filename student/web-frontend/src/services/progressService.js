@@ -1,4 +1,5 @@
 import { apiClient } from '../lib/apiClient';
+import { notificationService } from './notificationService';
 
 const PROGRESS_STORAGE_KEY = '@vidya_web_chapter_progress';
 const BOOKMARKS_STORAGE_KEY = '@vidya_web_bookmarks';
@@ -88,51 +89,21 @@ export const getStoredNotifications = () => {
   } catch {
     // fallback
   }
-
-  // Initial seed notifications
-  const initial = [
-    {
-      id: 'notif-1',
-      title: 'Welcome to Term 2!',
-      message: 'Explore your updated Class curriculum and track your daily learning goals.',
-      body: 'Explore your updated Class curriculum and track your daily learning goals.',
-      type: 'announcement',
-      isRead: false,
-      createdAt: Date.now() - 3600000,
-    },
-    {
-      id: 'notif-2',
-      title: 'Mathematics Chapter 1 Ready',
-      message: 'New practice problems and key formulas added to Real Numbers.',
-      body: 'New practice problems and key formulas added to Real Numbers.',
-      type: 'update',
-      isRead: false,
-      createdAt: Date.now() - 86400000,
-    },
-    {
-      id: 'notif-3',
-      title: 'Great Study Streak!',
-      message: 'You have actively learned 5 days this week. Keep up the great work!',
-      body: 'You have actively learned 5 days this week. Keep up the great work!',
-      type: 'achievement',
-      isRead: true,
-      createdAt: Date.now() - 172800000,
-    },
-  ];
-  localStorage.setItem(NOTIFICATIONS_STORAGE_KEY, JSON.stringify(initial));
-  return initial;
+  return [];
 };
 
 export const markNotificationAsRead = (id) => {
+  notificationService.markAsRead(id).catch(() => {});
   const current = getStoredNotifications();
-  const updated = current.map((n) => (n.id === id ? { ...n, isRead: true } : n));
+  const updated = current.map((n) => (n.id === id ? { ...n, isRead: true, read: true } : n));
   localStorage.setItem(NOTIFICATIONS_STORAGE_KEY, JSON.stringify(updated));
   return updated;
 };
 
 export const markAllNotificationsAsRead = () => {
+  notificationService.markAllAsRead().catch(() => {});
   const current = getStoredNotifications();
-  const updated = current.map((n) => ({ ...n, isRead: true }));
+  const updated = current.map((n) => ({ ...n, isRead: true, read: true }));
   localStorage.setItem(NOTIFICATIONS_STORAGE_KEY, JSON.stringify(updated));
   return updated;
 };

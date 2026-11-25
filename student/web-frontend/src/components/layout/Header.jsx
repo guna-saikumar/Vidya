@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useProfile } from '../../hooks/useProfile';
+import { notificationService } from '../../services/notificationService';
 import { resolveAvatarUrl } from '../../lib/avatar';
 import styles from './Header.css';
 
@@ -36,6 +37,7 @@ export const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const menuRef = useRef(null);
   const avatar = resolveAvatarUrl(profile?.avatarUrl);
@@ -45,6 +47,16 @@ export const Header = () => {
     profile?.firstName && profile?.lastName
       ? `${profile.firstName} ${profile.lastName}`
       : profile?.fullName || profile?.name || user?.name || 'Student';
+
+  useEffect(() => {
+    notificationService
+      .getNotifications()
+      .then((data) => {
+        const unread = (data || []).filter((n) => !n.isRead && !n.read).length;
+        setUnreadCount(unread);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -100,6 +112,9 @@ export const Header = () => {
                   >
                     <Icon size={16} />
                     <span>{item.label}</span>
+                    {item.to === '/notifications' && unreadCount > 0 && (
+                      <span className={styles.navBadge}>{unreadCount}</span>
+                    )}
                   </NavLink>
                 </li>
               );
