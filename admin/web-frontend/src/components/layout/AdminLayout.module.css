@@ -19,11 +19,14 @@
 }
 
 .sidebarHeader {
-  padding: 1.5rem 1.25rem 1.25rem;
+  height: 70px;
+  box-sizing: border-box;
+  padding: 0 1.25rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid var(--border);
+  background: var(--white);
 }
 
 .brand {
@@ -33,16 +36,16 @@
 }
 
 .brandLogoBox {
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   border-radius: var(--radius-md);
   background: var(--white);
   border: 1px solid var(--border-accent);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px;
-  box-shadow: 0 4px 10px rgba(185, 93, 63, 0.15);
+  padding: 3px;
+  box-shadow: 0 2px 8px rgba(185, 93, 63, 0.12);
   flex-shrink: 0;
 }
 
@@ -55,6 +58,7 @@
 .brandText {
   display: flex;
   flex-direction: column;
+  justify-content: center;
 }
 
 .brandTitle {
@@ -69,6 +73,8 @@
   font-size: 0.75rem;
   color: var(--text-muted);
   font-weight: 600;
+  line-height: 1.2;
+  margin-top: 2px;
 }
 
 .closeMobileBtn {
@@ -341,6 +347,7 @@
 
 .topHeader {
   height: 70px;
+  box-sizing: border-box;
   background: var(--white);
   border-bottom: 1px solid var(--border);
   padding: 0 2rem;
@@ -366,10 +373,11 @@
 .headerTitleWrap {
   display: flex;
   flex-direction: column;
+  justify-content: center;
 }
 
 .headerTitle {
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   font-weight: 800;
   color: var(--text-primary);
   letter-spacing: -0.02em;
@@ -380,6 +388,8 @@
   font-size: 0.75rem;
   color: var(--text-muted);
   font-weight: 500;
+  line-height: 1.2;
+  margin-top: 2px;
 }
 
 .headerRight {
