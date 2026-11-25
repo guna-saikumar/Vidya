@@ -13,8 +13,8 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "paths": {
-      "@vidya/api-client": ["./mobile-frontend/src/api-client"],
-      "@vidya/auth": ["./mobile-frontend/src/types/auth"]
+      "@vidya/api-client": ["./student/mobile-frontend/src/api-client", "./mobile-frontend/src/api-client"],
+      "@vidya/auth": ["./student/mobile-frontend/src/types/auth", "./mobile-frontend/src/types/auth"]
     }
   }
 }

@@ -7,8 +7,10 @@
     "useDefineForClassFields": false
   },
   "include": [
-    "mobile-frontend/**/*",
-    "web-frontend/**/*",
+    "student/mobile-frontend/**/*",
+    "student/web-frontend/**/*",
+    "admin/mobile-frontend/**/*",
+    "admin/web-frontend/**/*",
     "backend/**/*",
     "packages/**/*"
   ],
