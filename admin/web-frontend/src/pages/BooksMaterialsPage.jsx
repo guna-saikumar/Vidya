@@ -393,7 +393,7 @@ export const BooksMaterialsPage = () => {
               ) : (
                 <>
                   <UploadCloud size={18} />
-                  <span>Publish to Student Portal</span>
+                  <span>Publish Study Material</span>
                 </>
               )}
             </button>

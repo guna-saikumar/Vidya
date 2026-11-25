@@ -21,7 +21,7 @@ const navItems = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/books', label: 'Books & Materials', icon: BookOpen },
   { path: '/alerts', label: 'Broadcast Alerts', icon: BellRing },
-  { path: '/students', label: 'Students Portal', icon: Users },
+  { path: '/students', label: 'Enrolled Students', icon: Users },
   { path: '/curriculum', label: 'Curriculum & Classes', icon: GraduationCap },
   { path: '/support', label: 'Support Complaints', icon: LifeBuoy },
   { path: '/settings', label: 'Settings', icon: Settings },
@@ -99,33 +99,24 @@ export const AdminLayout = () => {
         </nav>
 
         <div className={styles.sidebarFooter}>
-          <div className={styles.authStatusCard}>
-            <div className={styles.authStatusHeader}>
-              <ShieldCheck size={16} color="var(--success)" />
-              <span className={styles.authRole}>Admin Authorized</span>
+          <div className={styles.adminUserCard}>
+            <div className={styles.adminAvatarSmall}>
+              {adminUser?.name ? adminUser.name[0].toUpperCase() : 'A'}
             </div>
-            <span className={styles.tokenPill}>{adminUser?.email || 'admin@vidya.test'}</span>
+            <div className={styles.adminUserCardMeta}>
+              <span className={styles.adminUserName}>{adminUser?.name || 'Administrator'}</span>
+              <span className={styles.adminUserEmail}>{adminUser?.email || 'admin@vidya.test'}</span>
+            </div>
           </div>
 
-          <div className={styles.footerActions}>
-            <a
-              href="http://localhost:5174"
-              target="_blank"
-              rel="noreferrer"
-              className={styles.portalLink}
-            >
-              <span>Student Portal</span>
-              <ExternalLink size={13} />
-            </a>
-            <button
-              onClick={handleLogout}
-              className={styles.logoutBtn}
-              title="Logout from Admin"
-            >
-              <LogOut size={16} />
-              <span>Logout</span>
-            </button>
-          </div>
+          <button
+            onClick={handleLogout}
+            className={styles.logoutBtn}
+            title="Sign Out of Admin"
+          >
+            <LogOut size={16} />
+            <span>Sign Out</span>
+          </button>
         </div>
       </aside>
 
@@ -148,11 +139,6 @@ export const AdminLayout = () => {
           </div>
 
           <div className={styles.headerRight}>
-            <div className={styles.systemStatus}>
-              <span className={styles.statusDot} />
-              <span className={styles.statusText}>API :4000 Connected</span>
-            </div>
-
             <div className={styles.adminUserBadge}>
               <div className={styles.adminAvatar}>
                 {adminUser?.name ? adminUser.name[0].toUpperCase() : 'A'}

@@ -151,7 +151,7 @@ export const StudentsManagementPage = () => {
       {/* Intro Header */}
       <div className={styles.pageIntro}>
         <div>
-          <h2 className={styles.pageHeading}>Students Portal Management</h2>
+          <h2 className={styles.pageHeading}>Enrolled Students Management</h2>
           <p className={styles.pageSubheading}>
             Manage enrolled students, academic grades, syllabus completion, and learning records
           </p>

@@ -23,6 +23,18 @@
   margin-top: 0.25rem;
 }
 
+.savedBanner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--success-bg);
+  color: var(--success);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
 .settingsGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -74,140 +86,130 @@
   color: var(--text-muted);
 }
 
-.savedBanner {
+.profileDetails,
+.preferencesList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.detailRow {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: space-between;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--soft-warm);
+}
+
+.detailLabel {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.detailValue {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.roleBadge {
+  background: var(--pale-peach);
+  color: var(--primary);
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.secureBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   background: var(--success-bg);
   color: var(--success);
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.profileFooter {
+  margin-top: auto;
+  padding-top: 1rem;
+}
+
+.logoutButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
   padding: 0.75rem 1rem;
   border-radius: var(--radius-md);
-  font-size: 0.8125rem;
-  font-weight: 700;
-}
-
-.tokenForm {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-.formGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.fieldLabel {
-  font-size: 0.8125rem;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.textInput {
-  padding: 0.75rem 0.875rem;
-  border-radius: var(--radius-md);
-  border: 1.5px solid var(--border);
-  background: var(--surface-soft);
+  background: var(--error-bg);
+  color: var(--error);
   font-size: 0.875rem;
+  font-weight: 700;
+  border: 1px solid rgba(184, 64, 64, 0.2);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.logoutButton:hover {
+  background: var(--error);
+  color: var(--white);
+}
+
+.preferenceItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--soft-warm);
+}
+
+.prefText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.prefTitle {
+  font-size: 0.875rem;
+  font-weight: 700;
   color: var(--text-primary);
-  outline: none;
 }
 
-.textInput:focus {
-  border-color: var(--primary);
-  background: var(--white);
-  box-shadow: 0 0 0 3px rgba(185, 93, 63, 0.12);
-}
-
-.fieldHint {
+.prefSub {
   font-size: 0.75rem;
   color: var(--text-muted);
 }
 
-.fieldHint code {
-  background: var(--pale-peach);
-  color: var(--primary-dark);
-  padding: 0.1rem 0.3rem;
-  border-radius: 4px;
+.toggleCheckbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+  cursor: pointer;
 }
 
-.buttonRow {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.saveBtn {
+.savePrefsBtn {
+  margin-top: auto;
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
   padding: 0.75rem 1.25rem;
   border-radius: var(--radius-md);
   background: var(--primary);
   color: var(--white);
   font-weight: 700;
   font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: none;
 }
 
-.saveBtn:hover {
+.savePrefsBtn:hover {
   background: var(--primary-dark);
-}
-
-.resetBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.75rem 1rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-  background: var(--white);
-  color: var(--text-secondary);
-  font-weight: 600;
-  font-size: 0.875rem;
-}
-
-.resetBtn:hover {
-  background: var(--soft-warm);
-}
-
-/* Info List */
-.infoList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
-}
-
-.infoItem {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 1rem;
-  background: var(--surface-soft);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  font-size: 0.8125rem;
-}
-
-.infoLabel {
-  font-weight: 700;
-  color: var(--text-secondary);
-}
-
-.infoVal {
-  font-family: monospace;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.docsLink {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-weight: 700;
-  color: var(--primary);
-}
-
-.docsLink:hover {
-  text-decoration: underline;
 }

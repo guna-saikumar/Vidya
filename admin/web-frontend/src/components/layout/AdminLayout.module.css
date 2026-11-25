@@ -130,61 +130,67 @@
   background: var(--soft-warm);
 }
 
-.authStatusCard {
+.adminUserCard {
   background: var(--white);
   padding: 0.75rem;
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
   display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  align-items: center;
+  gap: 0.65rem;
 }
 
-.authStatusHeader {
+.adminAvatarSmall {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--pale-peach);
+  color: var(--primary);
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.adminUserCardMeta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.adminUserName {
   font-size: 0.8125rem;
   font-weight: 700;
-  color: var(--success);
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.tokenPill {
+.adminUserEmail {
   font-size: 0.6875rem;
   color: var(--text-muted);
-  font-family: monospace;
-}
-
-.footerActions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
-.portalLink {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--primary);
-}
-
-.portalLink:hover {
-  text-decoration: underline;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .logoutBtn {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  font-size: 0.75rem;
-  font-weight: 600;
+  justify-content: center;
+  gap: 0.45rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
   color: var(--error);
-  padding: 0.35rem 0.5rem;
-  border-radius: var(--radius-sm);
-  transition: background 0.15s;
+  padding: 0.65rem;
+  border-radius: var(--radius-md);
+  background: var(--white);
+  border: 1px solid rgba(184, 64, 64, 0.2);
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
 .logoutBtn:hover {

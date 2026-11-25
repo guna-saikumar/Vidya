@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -25,21 +25,51 @@ export const AdminLoginScreen: React.FC<AdminLoginScreenProps> = ({ onLoginSucce
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
 
-  const fillDemo = () => {
-    setEmail('admin@vidya.test');
-    setPassword('AdminDemo1!');
-    setErrorMessage('');
+  const passwordInputRef = useRef<any>(null);
+
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const validate = () => {
+    let isValid = true;
+    const cleanEmail = email.trim();
+
+    if (!cleanEmail) {
+      setEmailError('Administrator email is required.');
+      isValid = false;
+    } else if (!EMAIL_REGEX.test(cleanEmail)) {
+      setEmailError('Please enter a valid email address.');
+      isValid = false;
+    } else {
+      setEmailError(null);
+    }
+
+    if (!password) {
+      setPasswordError('Password is required.');
+      isValid = false;
+    } else if (password.length < 4) {
+      setPasswordError('Password must be at least 4 characters.');
+      isValid = false;
+    } else {
+      setPasswordError(null);
+    }
+
+    return isValid;
   };
 
   const handleLogin = async () => {
-    if (!email.trim() || !password.trim()) {
-      setErrorMessage('Please enter both your email address and password.');
+    if (!validate()) {
+      setErrorMessage('Please enter your administrator email and password.');
       return;
     }
 
     setLoading(true);
     setErrorMessage('');
+    setEmailError(null);
+    setPasswordError(null);
+
     try {
       const data = await adminMobileApi.login(email.trim(), password);
       onLoginSuccess(data?.user || { email, role: 'ADMIN' });
@@ -59,10 +89,11 @@ export const AdminLoginScreen: React.FC<AdminLoginScreenProps> = ({ onLoginSucce
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        <View style={styles.card}>
-          {/* Logo Badge */}
-          <View style={styles.logoContainer}>
+        <View style={styles.cardWrapper}>
+          {/* Brand Header */}
+          <View style={styles.brandHeader}>
             <View style={styles.logoBox}>
               <Image
                 source={require('../../assets/app-images/logo.png')}
@@ -70,80 +101,108 @@ export const AdminLoginScreen: React.FC<AdminLoginScreenProps> = ({ onLoginSucce
                 resizeMode="contain"
               />
             </View>
-            <Text style={styles.appTitle}>Vidya Admin</Text>
-            <Text style={styles.appSubtitle}>
-              AP SCERT Academic Management Portal
-            </Text>
+            <Text style={styles.brandTitle}>Vidya Admin</Text>
+            <View style={styles.badgePill}>
+              <Text style={styles.badgePillText}>ADMIN PORTAL &bull; AP SCERT</Text>
+            </View>
           </View>
 
-          {/* Error Message Banner */}
-          {errorMessage ? (
-            <View style={styles.errorBox}>
-              <MaterialIcons name="error-outline" size={20} color={Colors.error} />
-              <Text style={styles.errorText}>{errorMessage}</Text>
+          {/* Form Card */}
+          <View style={styles.card}>
+            <View style={styles.cardTitleWrap}>
+              <Text style={styles.cardTitle}>Sign In</Text>
+              <Text style={styles.cardSubtitle}>
+                Enter your credentials to manage books, alerts & enrolled students.
+              </Text>
             </View>
-          ) : null}
 
-          {/* Form */}
-          <View style={styles.form}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Admin Email Address</Text>
-              <View style={styles.inputWrapper}>
-                <MaterialIcons name="mail-outline" size={20} color={Colors.textPlaceholder} />
+            {/* Error Banner */}
+            {errorMessage ? (
+              <View style={styles.errorAlert}>
+                <MaterialIcons name="error-outline" size={18} color={Colors.error} />
+                <Text style={styles.errorAlertText}>{errorMessage}</Text>
+              </View>
+            ) : null}
+
+            {/* Email Field */}
+            <View style={styles.fieldGroup}>
+              <View style={styles.labelRow}>
+                <Text style={styles.label}>Admin Email</Text>
+                {emailError ? <Text style={styles.fieldError}>{emailError}</Text> : null}
+              </View>
+              <View style={[styles.inputWrapper, emailError ? styles.inputWrapperError : null]}>
+                <MaterialIcons
+                  name="mail-outline"
+                  size={18}
+                  color={emailError ? Colors.error : Colors.textSecondary}
+                />
                 <TextInput
                   style={styles.input}
-                  placeholder="admin@vidya.test"
+                  placeholder="Enter your admin email"
                   placeholderTextColor={Colors.textPlaceholder}
                   value={email}
                   onChangeText={(t) => {
                     setEmail(t);
-                    setErrorMessage('');
+                    if (emailError) setEmailError(null);
+                    if (errorMessage) setErrorMessage('');
                   }}
                   autoCapitalize="none"
                   keyboardType="email-address"
                   autoCorrect={false}
+                  returnKeyType="next"
+                  onSubmitEditing={() => passwordInputRef.current?.focus()}
                 />
               </View>
             </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Admin Password</Text>
-              <View style={styles.inputWrapper}>
-                <MaterialIcons name="lock-outline" size={20} color={Colors.textPlaceholder} />
+            {/* Password Field */}
+            <View style={styles.fieldGroup}>
+              <View style={styles.labelRow}>
+                <Text style={styles.label}>Password</Text>
+                {passwordError ? <Text style={styles.fieldError}>{passwordError}</Text> : null}
+              </View>
+              <View style={[styles.inputWrapper, passwordError ? styles.inputWrapperError : null]}>
+                <MaterialIcons
+                  name="lock-outline"
+                  size={18}
+                  color={passwordError ? Colors.error : Colors.textSecondary}
+                />
                 <TextInput
+                  ref={passwordInputRef}
                   style={styles.input}
                   placeholder="Enter your password"
                   placeholderTextColor={Colors.textPlaceholder}
                   value={password}
                   onChangeText={(t) => {
                     setPassword(t);
-                    setErrorMessage('');
+                    if (passwordError) setPasswordError(null);
+                    if (errorMessage) setErrorMessage('');
                   }}
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"
                   autoCorrect={false}
+                  returnKeyType="done"
+                  onSubmitEditing={handleLogin}
                 />
-                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                  style={styles.eyeBtn}
+                >
                   <MaterialIcons
                     name={showPassword ? 'visibility-off' : 'visibility'}
-                    size={20}
+                    size={18}
                     color={Colors.textPlaceholder}
                   />
                 </TouchableOpacity>
               </View>
             </View>
 
-            {/* Quick Demo Credentials Button */}
-            <TouchableOpacity style={styles.demoButton} onPress={fillDemo}>
-              <MaterialIcons name="auto-fix-high" size={16} color={Colors.primary} />
-              <Text style={styles.demoButtonText}>Fill Demo Admin (admin@vidya.test)</Text>
-            </TouchableOpacity>
-
             {/* Submit Button */}
             <TouchableOpacity
               style={[styles.submitButton, loading && styles.submitButtonDisabled]}
               onPress={handleLogin}
               disabled={loading}
+              activeOpacity={0.8}
             >
               {loading ? (
                 <ActivityIndicator color={Colors.white} size="small" />
@@ -154,13 +213,13 @@ export const AdminLoginScreen: React.FC<AdminLoginScreenProps> = ({ onLoginSucce
                 </>
               )}
             </TouchableOpacity>
-          </View>
 
-          <View style={styles.footer}>
-            <MaterialIcons name="verified-user" size={16} color={Colors.success} />
-            <Text style={styles.footerText}>
-              Restricted to authorized teachers & academic administrators
-            </Text>
+            <View style={styles.cardFooter}>
+              <MaterialIcons name="verified-user" size={14} color={Colors.success} />
+              <Text style={styles.cardFooterText}>
+                Authorized access only &bull; AP SCERT 2026–27
+              </Text>
+            </View>
           </View>
         </View>
       </ScrollView>
@@ -171,144 +230,184 @@ export const AdminLoginScreen: React.FC<AdminLoginScreenProps> = ({ onLoginSucce
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.softWarm,
+    backgroundColor: '#FAF7F2',
   },
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 32,
+  },
+  cardWrapper: {
+    width: '100%',
+    maxWidth: 420,
+    alignSelf: 'center',
+  },
+  brandHeader: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  logoBox: {
+    width: 56,
+    height: 56,
+    borderRadius: 14,
+    backgroundColor: Colors.palePeach,
+    borderWidth: 1,
+    borderColor: '#F2DED3',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  logoImage: {
+    width: 40,
+    height: 40,
+  },
+  brandTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+    color: Colors.textPrimary,
+  },
+  badgePill: {
+    marginTop: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 3,
+    borderRadius: 99,
+    backgroundColor: Colors.palePeach,
+    borderWidth: 1,
+    borderColor: Colors.primaryLight,
+  },
+  badgePillText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: Colors.primary,
+    letterSpacing: 0.8,
   },
   card: {
     backgroundColor: Colors.white,
-    borderRadius: 24,
-    padding: 24,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: Colors.border,
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 3,
-    gap: 18,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+    gap: 16,
   },
-  logoContainer: {
-    alignItems: 'center',
-    gap: 6,
+  cardTitleWrap: {
+    gap: 4,
   },
-  logoBox: {
-    width: 76,
-    height: 76,
-    borderRadius: 20,
-    backgroundColor: Colors.white,
-    borderWidth: 1.5,
-    borderColor: Colors.borderAccent,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 8,
-    marginBottom: 6,
-  },
-  logoImage: {
-    width: '100%',
-    height: '100%',
-  },
-  appTitle: {
-    fontSize: 22,
-    fontWeight: '800',
+  cardTitle: {
+    fontSize: 20,
+    fontWeight: '700',
     color: Colors.textPrimary,
   },
-  appSubtitle: {
+  cardSubtitle: {
     fontSize: 12,
+    fontWeight: '500',
     color: Colors.textSecondary,
-    textAlign: 'center',
+    lineHeight: 16,
   },
-  errorBox: {
+  errorAlert: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 8,
-    backgroundColor: Colors.errorBg,
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    borderRadius: 10,
     padding: 12,
-    borderRadius: 12,
   },
-  errorText: {
+  errorAlertText: {
     flex: 1,
     fontSize: 12,
-    fontWeight: '700',
-    color: Colors.error,
+    fontWeight: '600',
+    color: '#B91C1C',
+    lineHeight: 16,
   },
-  form: {
-    gap: 14,
-  },
-  inputGroup: {
+  fieldGroup: {
     gap: 6,
   },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   label: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
     color: Colors.textPrimary,
+  },
+  fieldError: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#DC2626',
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.softWarm,
+    backgroundColor: '#F9FAFB',
     borderWidth: 1,
     borderColor: Colors.border,
-    borderRadius: 14,
-    paddingHorizontal: 14,
+    borderRadius: 12,
+    paddingHorizontal: 12,
     height: 48,
-    gap: 10,
+    gap: 8,
+  },
+  inputWrapperError: {
+    borderColor: '#EF4444',
+    backgroundColor: '#FEF2F2',
   },
   input: {
     flex: 1,
     fontSize: 14,
     color: Colors.textPrimary,
   },
-  demoButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    backgroundColor: Colors.palePeach,
-    paddingVertical: 10,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.borderAccent,
-  },
-  demoButtonText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: Colors.primaryDark,
+  eyeBtn: {
+    padding: 4,
   },
   submitButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
+    height: 48,
+    borderRadius: 12,
     backgroundColor: Colors.primary,
-    paddingVertical: 14,
-    borderRadius: 14,
     marginTop: 4,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 3,
   },
   submitButtonDisabled: {
-    opacity: 0.6,
+    opacity: 0.65,
   },
   submitButtonText: {
     color: Colors.white,
-    fontSize: 15,
-    fontWeight: '800',
+    fontSize: 14,
+    fontWeight: '700',
   },
-  footer: {
+  cardFooter: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingTop: 8,
+    paddingTop: 12,
     borderTopWidth: 1,
     borderTopColor: Colors.softWarm,
   },
-  footerText: {
+  cardFooterText: {
     fontSize: 11,
     color: Colors.textMuted,
     textAlign: 'center',
-    flex: 1,
   },
 });

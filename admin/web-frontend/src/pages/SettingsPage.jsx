@@ -1,146 +1,179 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
-  Settings,
-  KeyRound,
-  Server,
-  ShieldAlert,
+  User,
+  ShieldCheck,
+  BookOpen,
+  Bell,
+  LogOut,
   CheckCircle2,
-  ExternalLink,
-  Save,
-  RotateCcw,
+  Lock,
+  Globe,
+  School,
 } from 'lucide-react';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import styles from './SettingsPage.module.css';
 
 export const SettingsPage = () => {
-  const { adminToken, login } = useAdminAuth();
-  const [tokenInput, setTokenInput] = useState(adminToken);
-  const [saved, setSaved] = useState(false);
+  const { adminUser, logout } = useAdminAuth();
+  const navigate = useNavigate();
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [autoSyncEnabled, setAutoSyncEnabled] = useState(true);
+  const [savedMessage, setSavedMessage] = useState('');
 
-  const handleSaveToken = (e) => {
-    e.preventDefault();
-    login(tokenInput.trim());
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+  const handleSavePreferences = () => {
+    setSavedMessage('Portal preferences updated successfully.');
+    setTimeout(() => setSavedMessage(''), 3000);
   };
 
-  const handleResetDefault = () => {
-    setTokenInput('vidya-admin-secret');
-    login('vidya-admin-secret');
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
   };
 
   return (
     <div className={styles.pageContainer}>
       <div className={styles.pageIntro}>
         <div>
-          <h2 className={styles.pageHeading}>Admin Settings & Connectivity</h2>
+          <h2 className={styles.pageHeading}>Portal Settings & Profile</h2>
           <p className={styles.pageSubheading}>
-            Configure administrator authentication, backend endpoints, and access tokens
+            Manage administrator credentials, portal preferences, and academic session settings
           </p>
         </div>
       </div>
 
+      {savedMessage && (
+        <div className={styles.savedBanner}>
+          <CheckCircle2 size={16} />
+          <span>{savedMessage}</span>
+        </div>
+      )}
+
       <div className={styles.settingsGrid}>
-        {/* Token Management Card */}
+        {/* Administrator Profile Card */}
         <div className={styles.settingsCard}>
           <div className={styles.cardHeader}>
             <div className={styles.cardIcon}>
-              <KeyRound size={20} color="var(--primary)" />
+              <User size={20} color="var(--primary)" />
             </div>
             <div>
-              <h3 className={styles.cardTitle}>Admin Access Secret (x-admin-token)</h3>
+              <h3 className={styles.cardTitle}>Administrator Profile</h3>
               <p className={styles.cardSubtitle}>
-                Used to authorize upload, broadcast, and student management API requests
+                Account details authorized for academic management
               </p>
             </div>
           </div>
 
-          {saved && (
-            <div className={styles.savedBanner}>
-              <CheckCircle2 size={16} />
-              <span>Admin security token updated successfully!</span>
-            </div>
-          )}
-
-          <form onSubmit={handleSaveToken} className={styles.tokenForm}>
-            <div className={styles.formGroup}>
-              <label className={styles.fieldLabel}>Active Admin Secret</label>
-              <input
-                type="text"
-                className={styles.textInput}
-                value={tokenInput}
-                onChange={(e) => setTokenInput(e.target.value)}
-                placeholder="Enter admin token..."
-                required
-              />
-              <span className={styles.fieldHint}>
-                Corresponds to <code>ADMIN_TOKEN</code> in backend <code>.env</code>.
+          <div className={styles.profileDetails}>
+            <div className={styles.detailRow}>
+              <span className={styles.detailLabel}>Full Name</span>
+              <span className={styles.detailValue}>
+                {adminUser?.name || 'Academic Administrator'}
               </span>
             </div>
 
-            <div className={styles.buttonRow}>
-              <button type="submit" className={styles.saveBtn}>
-                <Save size={16} />
-                <span>Save Token</span>
-              </button>
-              <button
-                type="button"
-                className={styles.resetBtn}
-                onClick={handleResetDefault}
-              >
-                <RotateCcw size={15} />
-                <span>Reset to Default</span>
-              </button>
+            <div className={styles.detailRow}>
+              <span className={styles.detailLabel}>Email Address</span>
+              <span className={styles.detailValue}>
+                {adminUser?.email || 'admin@vidya.test'}
+              </span>
             </div>
-          </form>
+
+            <div className={styles.detailRow}>
+              <span className={styles.detailLabel}>Role & Scope</span>
+              <span className={styles.roleBadge}>
+                {adminUser?.role || 'ADMIN'} &bull; Academic Desk
+              </span>
+            </div>
+
+            <div className={styles.detailRow}>
+              <span className={styles.detailLabel}>Authority Board</span>
+              <span className={styles.detailValue}>
+                AP SCERT (Government of Andhra Pradesh)
+              </span>
+            </div>
+
+            <div className={styles.detailRow}>
+              <span className={styles.detailLabel}>Academic Year</span>
+              <span className={styles.detailValue}>2026–2027</span>
+            </div>
+          </div>
+
+          <div className={styles.profileFooter}>
+            <button onClick={handleLogout} className={styles.logoutButton}>
+              <LogOut size={16} />
+              <span>Sign Out of Admin Portal</span>
+            </button>
+          </div>
         </div>
 
-        {/* System & Architecture Info */}
+        {/* Academic Portal Preferences Card */}
         <div className={styles.settingsCard}>
           <div className={styles.cardHeader}>
             <div className={styles.cardIcon}>
-              <Server size={20} color="var(--primary)" />
+              <School size={20} color="var(--primary)" />
             </div>
             <div>
-              <h3 className={styles.cardTitle}>Platform Environment</h3>
+              <h3 className={styles.cardTitle}>Curriculum & Publishing Preferences</h3>
               <p className={styles.cardSubtitle}>
-                Service specifications and connectivity
+                Configure curriculum distribution and publication options
               </p>
             </div>
           </div>
 
-          <div className={styles.infoList}>
-            <div className={styles.infoItem}>
-              <span className={styles.infoLabel}>NestJS Backend API</span>
-              <span className={styles.infoVal}>http://localhost:4000</span>
+          <div className={styles.preferencesList}>
+            <div className={styles.preferenceItem}>
+              <div className={styles.prefText}>
+                <span className={styles.prefTitle}>Broadcast Push Alerts</span>
+                <span className={styles.prefSub}>
+                  Send urgent announcements directly to enrolled students
+                </span>
+              </div>
+              <input
+                type="checkbox"
+                checked={notificationsEnabled}
+                onChange={(e) => setNotificationsEnabled(e.target.checked)}
+                className={styles.toggleCheckbox}
+              />
             </div>
-            <div className={styles.infoItem}>
-              <span className={styles.infoLabel}>Admin Portal Port</span>
-              <span className={styles.infoVal}>http://localhost:5175</span>
+
+            <div className={styles.preferenceItem}>
+              <div className={styles.prefText}>
+                <span className={styles.prefTitle}>Automatic Textbook Indexing</span>
+                <span className={styles.prefSub}>
+                  Auto-link uploaded PDF chapters with corresponding class subjects
+                </span>
+              </div>
+              <input
+                type="checkbox"
+                checked={autoSyncEnabled}
+                onChange={(e) => setAutoSyncEnabled(e.target.checked)}
+                className={styles.toggleCheckbox}
+              />
             </div>
-            <div className={styles.infoItem}>
-              <span className={styles.infoLabel}>Student Web Frontend</span>
-              <span className={styles.infoVal}>http://localhost:5174</span>
+
+            <div className={styles.detailRow}>
+              <span className={styles.detailLabel}>Class Coverage</span>
+              <span className={styles.detailValue}>Classes 6, 7, 8, 9, 10</span>
             </div>
-            <div className={styles.infoItem}>
-              <span className={styles.infoLabel}>PostgreSQL Database</span>
-              <span className={styles.infoVal}>Native Postgres :5432 (vidya)</span>
+
+            <div className={styles.detailRow}>
+              <span className={styles.detailLabel}>Instruction Medium</span>
+              <span className={styles.detailValue}>Telugu & English Medium</span>
             </div>
-            <div className={styles.infoItem}>
-              <span className={styles.infoLabel}>API Documentation</span>
-              <a
-                href="http://localhost:4000/docs"
-                target="_blank"
-                rel="noreferrer"
-                className={styles.docsLink}
-              >
-                <span>Open Swagger / OpenAPI Docs</span>
-                <ExternalLink size={13} />
-              </a>
+
+            <div className={styles.detailRow}>
+              <span className={styles.detailLabel}>Security Status</span>
+              <span className={styles.secureBadge}>
+                <ShieldCheck size={14} />
+                <span>Encrypted Session Active</span>
+              </span>
             </div>
           </div>
+
+          <button onClick={handleSavePreferences} className={styles.savePrefsBtn}>
+            <span>Save Preferences</span>
+          </button>
         </div>
       </div>
     </div>
