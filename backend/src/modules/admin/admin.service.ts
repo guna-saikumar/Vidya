@@ -121,7 +121,7 @@ export class AdminService {
         `SELECT u."id", u."email", p."firstName", p."lastName", p."grade", p."section", p."schoolName", u."createdAt"
          FROM "User" u
          LEFT JOIN "StudentProfile" p ON p."userId" = u."id"
-         WHERE u."role" = 'student'
+         WHERE u."role" = 'STUDENT'
          ORDER BY u."createdAt" DESC
          LIMIT 6`
       ),
@@ -184,7 +184,7 @@ export class AdminService {
     } else {
       // All students
       const { rows } = await this.db.query<{ id: string }>(
-        `SELECT "id" FROM "User" WHERE "role" = 'student'`
+        `SELECT "id" FROM "User" WHERE "role" = 'STUDENT'`
       );
       targetUserIds = rows.map((r) => r.id);
     }
@@ -275,7 +275,7 @@ export class AdminService {
   async listStudents(query: AdminStudentListQuery) {
     const offset = (query.page - 1) * query.limit;
     const params: unknown[] = [];
-    const conditions: string[] = [`u."role" = 'student'`];
+    const conditions: string[] = [`u."role" = 'STUDENT'`];
 
     if (query.search) {
       params.push(`%${query.search.toLowerCase()}%`);
@@ -499,7 +499,7 @@ export class AdminService {
 
   async deleteStudent(userId: string) {
     const { rowCount } = await this.db.query(
-      `DELETE FROM "User" WHERE "id" = $1 AND "role" = 'student'`,
+      `DELETE FROM "User" WHERE "id" = $1 AND "role" = 'STUDENT'`,
       [userId]
     );
     if (rowCount === 0) throw new NotFoundException({ error: "Student not found" });
