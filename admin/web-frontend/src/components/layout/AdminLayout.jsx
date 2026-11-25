@@ -28,7 +28,7 @@ const navItems = [
 ];
 
 export const AdminLayout = () => {
-  const { logout, adminToken } = useAdminAuth();
+  const { logout, adminUser } = useAdminAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -61,8 +61,8 @@ export const AdminLayout = () => {
       >
         <div className={styles.sidebarHeader}>
           <div className={styles.brand}>
-            <div className={styles.brandIcon}>
-              <GraduationCap size={22} color="#ffffff" />
+            <div className={styles.brandLogoBox}>
+              <img src="/assets/logo.png" alt="Vidya Logo" className={styles.brandLogoImg} />
             </div>
             <div className={styles.brandText}>
               <span className={styles.brandTitle}>Vidya Admin</span>
@@ -104,7 +104,7 @@ export const AdminLayout = () => {
               <ShieldCheck size={16} color="var(--success)" />
               <span className={styles.authRole}>Admin Authorized</span>
             </div>
-            <span className={styles.tokenPill}>Token: {adminToken ? '••••••••' : 'None'}</span>
+            <span className={styles.tokenPill}>{adminUser?.email || 'admin@vidya.test'}</span>
           </div>
 
           <div className={styles.footerActions}>
@@ -154,10 +154,12 @@ export const AdminLayout = () => {
             </div>
 
             <div className={styles.adminUserBadge}>
-              <div className={styles.adminAvatar}>A</div>
+              <div className={styles.adminAvatar}>
+                {adminUser?.name ? adminUser.name[0].toUpperCase() : 'A'}
+              </div>
               <div className={styles.adminMeta}>
-                <span className={styles.adminName}>Administrator</span>
-                <span className={styles.adminSchool}>Vidya SCERT Desk</span>
+                <span className={styles.adminName}>{adminUser?.name || 'Administrator'}</span>
+                <span className={styles.adminSchool}>{adminUser?.email || 'admin@vidya.test'}</span>
               </div>
             </div>
           </div>

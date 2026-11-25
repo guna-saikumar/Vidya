@@ -7,6 +7,7 @@ import {
   RefreshControl,
   ActivityIndicator,
   StyleSheet,
+  Image,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import Colors from '../constants/colors';
@@ -56,11 +57,22 @@ export const AdminDashboardScreen: React.FC<{ navigation: any }> = ({ navigation
     >
       {/* Welcome Banner */}
       <View style={styles.banner}>
-        <View style={styles.badgeRow}>
-          <MaterialIcons name="school" size={14} color={Colors.primary} />
-          <Text style={styles.badgeText}>AP SCERT 2026–27 &bull; ADMIN</Text>
+        <View style={styles.bannerHeader}>
+          <View style={styles.logoBadge}>
+            <Image
+              source={require('../../assets/app-images/logo.png')}
+              style={styles.logoImg}
+              resizeMode="contain"
+            />
+          </View>
+          <View style={styles.bannerTextCol}>
+            <View style={styles.badgeRow}>
+              <MaterialIcons name="verified-user" size={13} color={Colors.primary} />
+              <Text style={styles.badgeText}>AP SCERT 2026–27 &bull; ADMIN</Text>
+            </View>
+            <Text style={styles.bannerTitle}>Academic Management</Text>
+          </View>
         </View>
-        <Text style={styles.bannerTitle}>Academic Management</Text>
         <Text style={styles.bannerSub}>
           Live status of textbooks, student registrations & push alerts
         </Text>
@@ -161,7 +173,21 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
   },
-  badgeRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
+  bannerHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8 },
+  logoBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.borderAccent,
+    padding: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoImg: { width: '100%', height: '100%' },
+  bannerTextCol: { flex: 1 },
+  badgeRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
   badgeText: { fontSize: 11, fontWeight: '800', color: Colors.primary },
   bannerTitle: { fontSize: 20, fontWeight: '800', color: Colors.textPrimary },
   bannerSub: { fontSize: 13, color: Colors.textSecondary, marginTop: 4 },

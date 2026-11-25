@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   Inject,
   Param,
   Patch,
@@ -13,15 +14,42 @@ import {
 import { ApiOperation, ApiSecurity, ApiTags } from "@nestjs/swagger";
 import { AdminTokenGuard } from "../support/admin-token.guard";
 import { ZodValidationPipe } from "../../common/zod-validation.pipe";
+import { ApiZodBody } from "../../common/zod-openapi";
 import {
+  adminLoginSchema,
   adminStudentListQuerySchema,
   broadcastNotificationSchema,
   updateStudentProfileAdminSchema,
+  type AdminLoginInput,
   type AdminStudentListQuery,
   type BroadcastNotificationInput,
   type UpdateStudentProfileAdminInput,
 } from "./admin.schemas";
 import { AdminService } from "./admin.service";
+
+@ApiTags("admin · auth")
+@Controller(["api/admin/auth", "api/v1/admin/auth"])
+export class AdminAuthController {
+  constructor(@Inject(AdminService) private readonly admin: AdminService) {}
+
+  @Post("login")
+  @HttpCode(200)
+  @ApiOperation({ summary: "Admin login (email/password)" })
+  @ApiZodBody(adminLoginSchema)
+  login(
+    @Body(new ZodValidationPipe(adminLoginSchema)) body: AdminLoginInput
+  ) {
+    return this.admin.login(body);
+  }
+
+  @Get("me")
+  @UseGuards(AdminTokenGuard)
+  @ApiSecurity("x-admin-token")
+  @ApiOperation({ summary: "Get current authenticated admin user profile" })
+  getMe() {
+    return this.admin.getMe();
+  }
+}
 
 @ApiTags("admin · portal")
 @ApiSecurity("x-admin-token")

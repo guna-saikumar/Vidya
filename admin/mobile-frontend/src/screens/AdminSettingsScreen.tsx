@@ -12,12 +12,22 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MaterialIcons } from '@expo/vector-icons';
 import Colors from '../constants/colors';
-import { adminAxios, DEFAULT_TOKEN, adminMobileApi } from '../services/adminApi';
+import {
+  adminAxios,
+  DEFAULT_TOKEN,
+  adminMobileApi,
+  getFriendlyErrorMessage,
+  ADMIN_TOKEN_KEY,
+  ADMIN_API_URL_KEY,
+  ADMIN_USER_KEY,
+} from '../services/adminApi';
 
-const ADMIN_TOKEN_KEY = '@vidya_admin_mobile_token';
-const ADMIN_API_URL_KEY = '@vidya_admin_mobile_api_url';
+interface AdminSettingsScreenProps {
+  onLogout?: () => void;
+}
 
-export const AdminSettingsScreen: React.FC = () => {
+export const AdminSettingsScreen: React.FC<AdminSettingsScreenProps> = ({ onLogout }) => {
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [apiUrl, setApiUrl] = useState('');
   const [token, setToken] = useState('');
   const [testing, setTesting] = useState(false);
@@ -26,6 +36,8 @@ export const AdminSettingsScreen: React.FC = () => {
   useEffect(() => {
     (async () => {
       try {
+        const user = await adminMobileApi.getCurrentUser();
+        setCurrentUser(user);
         const storedUrl = await AsyncStorage.getItem(ADMIN_API_URL_KEY);
         const storedToken = await AsyncStorage.getItem(ADMIN_TOKEN_KEY);
         setApiUrl(storedUrl || adminAxios.defaults.baseURL || 'http://localhost:4000');
@@ -40,7 +52,6 @@ export const AdminSettingsScreen: React.FC = () => {
     setTesting(true);
     setTestResult(null);
     try {
-      // Temporarily override headers for test
       const res = await adminAxios.get('/api/v1/admin/overview', {
         baseURL: apiUrl.trim(),
         headers: { 'x-admin-token': token.trim() },
@@ -53,7 +64,7 @@ export const AdminSettingsScreen: React.FC = () => {
     } catch (err: any) {
       setTestResult({
         ok: false,
-        message: err.response?.data?.message || err.message || 'Connection failed',
+        message: getFriendlyErrorMessage(err, 'Unable to connect to the server. Please check your network and endpoint.'),
       });
     } finally {
       setTesting(false);
@@ -67,7 +78,7 @@ export const AdminSettingsScreen: React.FC = () => {
       adminAxios.defaults.baseURL = apiUrl.trim();
       Alert.alert('Settings Saved', 'Connection parameters updated successfully.');
     } catch (err: any) {
-      Alert.alert('Error', err.message);
+      Alert.alert('Error', getFriendlyErrorMessage(err));
     }
   };
 
@@ -80,12 +91,47 @@ export const AdminSettingsScreen: React.FC = () => {
       setTestResult(null);
       Alert.alert('Reset Complete', 'Default API settings restored.');
     } catch (err: any) {
-      Alert.alert('Error', err.message);
+      Alert.alert('Error', getFriendlyErrorMessage(err));
     }
+  };
+
+  const handleLogout = () => {
+    Alert.alert('Sign Out', 'Are you sure you want to log out from the Admin Portal?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Sign Out',
+        style: 'destructive',
+        onPress: async () => {
+          await adminMobileApi.logout();
+          onLogout?.();
+        },
+      },
+    ]);
   };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      {/* Current Admin Account Card */}
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <View style={[styles.iconBox, { backgroundColor: Colors.palePeach }]}>
+            <MaterialIcons name="person" size={24} color={Colors.primary} />
+          </View>
+          <View style={styles.userMeta}>
+            <Text style={styles.cardTitle}>{currentUser?.name || 'Academic Administrator'}</Text>
+            <Text style={styles.cardSubtitle}>{currentUser?.email || 'admin@vidya.test'}</Text>
+          </View>
+          <View style={styles.roleBadge}>
+            <Text style={styles.roleBadgeText}>ADMIN</Text>
+          </View>
+        </View>
+
+        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+          <MaterialIcons name="logout" size={18} color={Colors.error} />
+          <Text style={styles.logoutBtnText}>Sign Out of Admin Portal</Text>
+        </TouchableOpacity>
+      </View>
+
       {/* Connection Config Card */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
@@ -213,6 +259,25 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 4 },
+  userMeta: { flex: 1 },
+  roleBadge: {
+    backgroundColor: Colors.palePeach,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  roleBadgeText: { fontSize: 10, fontWeight: '800', color: Colors.primary },
+  logoutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: Colors.errorBg,
+    marginTop: 4,
+  },
+  logoutBtnText: { color: Colors.error, fontSize: 14, fontWeight: '700' },
   iconBox: {
     width: 44,
     height: 44,

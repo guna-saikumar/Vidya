@@ -41,13 +41,53 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+export function sanitizeErrorMessage(raw: unknown, fallback = 'Something went wrong. Please try again.'): string {
+  if (!raw) return fallback;
+  const str = typeof raw === 'string' ? raw : raw instanceof Error ? raw.message : String(raw);
+
+  if (/ERR_NETWORK|ECONNREFUSED|ENOTFOUND|Network Error/i.test(str)) {
+    return 'Cannot reach the server. Check your internet connection.';
+  }
+  if (/Request failed with status code 401|Unauthorized|Invalid token/i.test(str)) {
+    return 'Incorrect email or password. Please try again.';
+  }
+  if (/Request failed with status code 403|Forbidden/i.test(str)) {
+    return 'You do not have permission to perform this action.';
+  }
+  if (/Request failed with status code 404|Not Found/i.test(str)) {
+    return 'The requested resource was not found.';
+  }
+  if (/Request failed with status code 5\d\d|Internal Server Error|syntax error|Postgres|violates|duplicate key|P2002/i.test(str)) {
+    return 'A temporary server error occurred. Please try again shortly.';
+  }
+  if (/timeout|ECONNABORTED/i.test(str)) {
+    return 'The request timed out. Please check your connection and try again.';
+  }
+  if (/^Error: /i.test(str)) {
+    return sanitizeErrorMessage(str.replace(/^Error: /i, ''), fallback);
+  }
+  return str;
+}
+
 /** Converts Axios/API errors into a message that can be shown to the user. */
 export function getApiErrorMessage(
   error: unknown,
   fallback = 'Something went wrong. Please try again.'
 ): string {
-  if (typeof error === 'string' && error.trim()) return error;
+  if (typeof error === 'string' && error.trim()) return sanitizeErrorMessage(error, fallback);
   if (axios.isAxiosError(error)) {
+    if (error.response?.status === 401) {
+      return 'Incorrect email or password. Please try again.';
+    }
+    if (error.response?.status === 403) {
+      return 'You do not have permission to perform this action.';
+    }
+    if (error.response?.status === 404) {
+      return 'The requested resource was not found.';
+    }
+    if (error.response?.status && error.response.status >= 500) {
+      return 'A temporary server error occurred. Please try again shortly.';
+    }
     const data: unknown = error.response?.data;
     if (isRecord(data)) {
       if (Array.isArray(data.details)) {
@@ -55,24 +95,21 @@ export function getApiErrorMessage(
           (item) => isRecord(item) && typeof item.message === 'string' && item.message.trim()
         );
         if (first && isRecord(first) && typeof first.message === 'string') {
-          return first.message;
+          return sanitizeErrorMessage(first.message, fallback);
         }
       }
       if (typeof data.error === 'string' && data.error.trim()) {
-        return data.error;
+        return sanitizeErrorMessage(data.error, fallback);
       }
       if (typeof data.message === 'string' && data.message.trim()) {
-        return data.message;
+        return sanitizeErrorMessage(data.message, fallback);
       }
     }
     if (!error.response) {
       return 'Cannot reach the server. Check your internet connection.';
     }
-    if (error.response.status >= 500) {
-      return 'The server could not complete the request. Please try again.';
-    }
   }
-  if (error instanceof Error && error.message.trim()) return error.message;
+  if (error instanceof Error && error.message.trim()) return sanitizeErrorMessage(error.message, fallback);
   return fallback;
 }
 

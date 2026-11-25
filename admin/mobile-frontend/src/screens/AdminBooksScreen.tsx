@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import Colors from '../constants/colors';
-import { adminMobileApi } from '../services/adminApi';
+import { adminMobileApi, getFriendlyErrorMessage } from '../services/adminApi';
 
 export const AdminBooksScreen: React.FC = () => {
   const [classes, setClasses] = useState<any[]>([]);
@@ -60,7 +60,7 @@ export const AdminBooksScreen: React.FC = () => {
             await adminMobileApi.deleteMaterial(id);
             loadMaterials();
           } catch (err: any) {
-            Alert.alert('Error', err.message);
+            Alert.alert('Error', getFriendlyErrorMessage(err));
           }
         },
       },

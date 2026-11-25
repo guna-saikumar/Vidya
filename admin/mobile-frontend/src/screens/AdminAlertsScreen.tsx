@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import Colors from '../constants/colors';
-import { adminMobileApi } from '../services/adminApi';
+import { adminMobileApi, getFriendlyErrorMessage } from '../services/adminApi';
 
 export const AdminAlertsScreen: React.FC = () => {
   const [title, setTitle] = useState('');
@@ -67,7 +67,7 @@ export const AdminAlertsScreen: React.FC = () => {
       setAudience('all');
       loadHistory();
     } catch (err: any) {
-      Alert.alert('Send Failed', err.response?.data?.message || err.message || 'Failed to send alert');
+      Alert.alert('Send Failed', getFriendlyErrorMessage(err, 'Failed to send alert'));
     } finally {
       setSending(false);
     }
@@ -84,7 +84,7 @@ export const AdminAlertsScreen: React.FC = () => {
             await adminMobileApi.deleteNotification(itemTitle);
             loadHistory();
           } catch (err: any) {
-            Alert.alert('Error', err.message);
+            Alert.alert('Error', getFriendlyErrorMessage(err));
           }
         },
       },

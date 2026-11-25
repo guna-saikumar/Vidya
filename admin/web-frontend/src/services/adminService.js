@@ -7,6 +7,17 @@ export const getStoredAdminToken = () =>
   localStorage.getItem(ADMIN_TOKEN_KEY) || DEFAULT_TOKEN;
 
 export const adminService = {
+  // ---- Auth ----
+  async login({ email, password }) {
+    const res = await adminApiClient.post('/api/v1/admin/auth/login', { email, password });
+    return res.data;
+  },
+
+  async getMe() {
+    const res = await adminApiClient.get('/api/v1/admin/auth/me');
+    return res.data;
+  },
+
   // ---- Overview / Analytics ----
   async getOverviewStats() {
     const res = await adminApiClient.get('/api/v1/admin/overview');

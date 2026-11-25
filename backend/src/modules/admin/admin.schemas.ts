@@ -1,5 +1,12 @@
 import { z } from "zod";
 
+export const adminLoginSchema = z.object({
+  email: z.string().trim().email("Please provide a valid email address"),
+  password: z.string().min(1, "Password is required"),
+});
+
+export type AdminLoginInput = z.infer<typeof adminLoginSchema>;
+
 export const broadcastNotificationSchema = z.object({
   title: z.string().trim().min(3, "Title must have at least 3 characters").max(100),
   message: z.string().trim().min(3, "Message must have at least 3 characters").max(500),

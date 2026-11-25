@@ -271,8 +271,20 @@ async function upsertStudentUser(
 }
 
 async function seedUsers(db: PoolClient) {
-  // Legacy admin account from earlier seeds (admin surface no longer exists).
-  await db.query(`DELETE FROM "User" WHERE "email" = 'admin@vidya.edu.in'`);
+  // Seed admin account
+  const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@vidya.test";
+  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "AdminDemo1!";
+  const adminHash = await bcrypt.hash(ADMIN_PASSWORD, 10);
+  await db.query(
+    `INSERT INTO "User" ("id", "email", "name", "role", "passwordHash", "emailVerifiedAt")
+     VALUES ($1, $2, $3, 'ADMIN', $4, $5)
+     ON CONFLICT ("email") DO UPDATE SET
+       "name" = EXCLUDED."name",
+       "role" = 'ADMIN',
+       "passwordHash" = EXCLUDED."passwordHash",
+       "emailVerifiedAt" = EXCLUDED."emailVerifiedAt"`,
+    [newId(), ADMIN_EMAIL, "Vidya Administrator", adminHash, iso(new Date())]
+  );
 
   const hash = await bcrypt.hash(STUDENT_PASSWORD, 10);
   const students: { user: SeedUser; profile: SeedStudent }[] = [];
@@ -661,6 +673,7 @@ async function main() {
 
     await db.query("COMMIT");
 
+    console.log(`\nAdmin account: admin@vidya.test / AdminDemo1!`);
     console.log("\nSeeded student accounts (password: StudentDemo1!):\n");
     for (const { profile } of students) {
       console.log(

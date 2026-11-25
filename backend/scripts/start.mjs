@@ -705,7 +705,8 @@ ${line("Database", u.dbLan)}
 ${line("DB (local)", u.dbLocal)}
 ${pgweb ? `${line("DB UI", u.pgwebLan)}\n${line("DB UI local", u.pgwebLocal)}` : line("DB UI", "(pgweb not installed)")}
 │
-${line("Login", "student@vidya.test / StudentDemo1!")}
+${line("Student", "student@vidya.test / StudentDemo1!")}
+${line("Admin", "admin@vidya.test / AdminDemo1!")}
 ${line("psql", "npm run db:psql")}
 └─────────────────────────────────────────────────────────────
 `);

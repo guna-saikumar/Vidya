@@ -92,19 +92,47 @@ apiClient.interceptors.response.use(
   }
 );
 
+export function sanitizeErrorMessage(raw, fallback = 'Something went wrong. Please try again.') {
+  if (!raw) return fallback;
+  const str = typeof raw === 'string' ? raw : String(raw?.message || raw?.error || fallback);
+
+  if (/ERR_NETWORK|ECONNREFUSED|ENOTFOUND|Network Error/i.test(str)) {
+    return 'Unable to reach the server. Please check your network connection.';
+  }
+  if (/Request failed with status code 401|Unauthorized/i.test(str)) {
+    return 'Incorrect email or password. Please try again.';
+  }
+  if (/Request failed with status code 403|Forbidden/i.test(str)) {
+    return 'You do not have permission to perform this action.';
+  }
+  if (/Request failed with status code 404|Not Found/i.test(str)) {
+    return 'The requested resource could not be found.';
+  }
+  if (/Request failed with status code 5\d\d|Internal Server Error|syntax error|Postgres|violates|duplicate key|P2002/i.test(str)) {
+    return 'A temporary server error occurred. Please try again shortly.';
+  }
+  if (/timeout|ECONNABORTED/i.test(str)) {
+    return 'The request timed out. Please check your connection and try again.';
+  }
+  if (/^Error: /i.test(str)) {
+    return sanitizeErrorMessage(str.replace(/^Error: /i, ''), fallback);
+  }
+  return str;
+}
+
 export function extractErrorMessage(err) {
   if (axios.isAxiosError(err)) {
     const data = err.response?.data;
-    if (data?.error) return data.error;
-    if (data?.message) return data.message;
-    if (err.response?.status === 401) return 'Unauthorized. Please sign in again.';
+    if (data?.error && typeof data.error === 'string') return sanitizeErrorMessage(data.error);
+    if (data?.message && typeof data.message === 'string') return sanitizeErrorMessage(data.message);
+    if (err.response?.status === 401) return 'Incorrect email or password. Please try again.';
     if (err.response?.status === 403) return 'You do not have permission to perform this action.';
-    if (err.response?.status === 404) return 'Requested resource was not found.';
-    if (err.response?.status && err.response.status >= 500) return 'Server error. Please try again later.';
-    if (err.code === 'ECONNABORTED') return 'Request timed out. Is the API reachable?';
-    return err.message || 'Request failed';
+    if (err.response?.status === 404) return 'The requested resource could not be found.';
+    if (err.response?.status && err.response.status >= 500) return 'A temporary server error occurred. Please try again shortly.';
+    if (err.code === 'ECONNABORTED' || !err.response) return 'Unable to reach the server. Please check your network connection.';
+    return sanitizeErrorMessage(err.message);
   }
-  if (err instanceof Error) return err.message;
-  return 'Request failed';
+  if (err instanceof Error) return sanitizeErrorMessage(err.message);
+  return 'Something went wrong. Please try again.';
 }
 

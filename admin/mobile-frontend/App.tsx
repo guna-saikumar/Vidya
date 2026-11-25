@@ -1,12 +1,14 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Image, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialIcons } from '@expo/vector-icons';
 
 import Colors from './src/constants/colors';
+import { adminMobileApi } from './src/services/adminApi';
+import { AdminLoginScreen } from './src/screens/AdminLoginScreen';
 import { AdminDashboardScreen } from './src/screens/AdminDashboardScreen';
 import { AdminBooksScreen } from './src/screens/AdminBooksScreen';
 import { AdminAlertsScreen } from './src/screens/AdminAlertsScreen';
@@ -16,6 +18,54 @@ import { AdminSettingsScreen } from './src/screens/AdminSettingsScreen';
 const Tab = createBottomTabNavigator();
 
 export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [adminUser, setAdminUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = await adminMobileApi.getStoredToken();
+        const user = await adminMobileApi.getCurrentUser();
+        if (token && user) {
+          setIsAuthenticated(true);
+          setAdminUser(user);
+        }
+      } catch (err) {
+        console.warn('Failed to restore session', err);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const handleLoginSuccess = (user: any) => {
+    setAdminUser(user);
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setAdminUser(null);
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.centerContainer}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <SafeAreaProvider>
+        <StatusBar style="dark" />
+        <AdminLoginScreen onLoginSuccess={handleLoginSuccess} />
+      </SafeAreaProvider>
+    );
+  }
+
   return (
     <SafeAreaProvider>
       <StatusBar style="dark" />
@@ -56,6 +106,16 @@ export default function App() {
             options={{
               title: 'Vidya Admin',
               tabBarLabel: 'Overview',
+              headerTitle: () => (
+                <View style={styles.headerTitleWrap}>
+                  <Image
+                    source={require('./assets/app-images/logo.png')}
+                    style={styles.headerLogo}
+                    resizeMode="contain"
+                  />
+                  <Text style={styles.headerTitleText}>Vidya Admin</Text>
+                </View>
+              ),
               tabBarIcon: ({ color, size }) => (
                 <MaterialIcons name="dashboard" size={size} color={color} />
               ),
@@ -96,7 +156,6 @@ export default function App() {
           />
           <Tab.Screen
             name="Settings"
-            component={AdminSettingsScreen}
             options={{
               title: 'Admin Settings',
               tabBarLabel: 'Settings',
@@ -104,7 +163,9 @@ export default function App() {
                 <MaterialIcons name="settings" size={size} color={color} />
               ),
             }}
-          />
+          >
+            {() => <AdminSettingsScreen onLogout={handleLogout} />}
+          </Tab.Screen>
         </Tab.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>
@@ -112,8 +173,24 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  centerContainer: {
     flex: 1,
-    backgroundColor: Colors.surfaceSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.softWarm,
+  },
+  headerTitleWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  headerLogo: {
+    width: 26,
+    height: 26,
+  },
+  headerTitleText: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: Colors.textPrimary,
   },
 });

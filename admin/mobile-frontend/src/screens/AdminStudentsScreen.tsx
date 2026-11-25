@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import Colors from '../constants/colors';
-import { adminMobileApi } from '../services/adminApi';
+import { adminMobileApi, getFriendlyErrorMessage } from '../services/adminApi';
 
 export const AdminStudentsScreen: React.FC = () => {
   const [students, setStudents] = useState<any[]>([]);
@@ -56,7 +56,7 @@ export const AdminStudentsScreen: React.FC = () => {
             await adminMobileApi.deleteStudent(id);
             loadStudents();
           } catch (err: any) {
-            Alert.alert('Error', err.message);
+            Alert.alert('Error', getFriendlyErrorMessage(err));
           }
         },
       },
