@@ -94,6 +94,7 @@ export const SubjectIndexScreen: React.FC<Props> = ({ route, navigation }) => {
         className="flex-1"
         contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 18, paddingBottom: 48, gap: 18 }}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {/* Subject Overview Banner with Thumbnail & Progress */}
         <HoverCard className="bg-palePeach rounded-[20px] p-5 gap-3 border border-[#ead7cd] shadow-sm" lift={-3}>

@@ -103,6 +103,7 @@ export const ClassSubjectsScreen: React.FC<Props> = ({ route, navigation }) => {
         className="flex-1"
         contentContainerStyle={{ paddingHorizontal: 22, paddingTop: 18, paddingBottom: 48, gap: 18 }}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {/* Learning Progress Card as in reference image */}
         <LearningProgressCard
