@@ -1,0 +1,213 @@
+.pageContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.pageIntro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pageHeading {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.pageSubheading {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+}
+
+.settingsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.75rem;
+}
+
+@media (max-width: 900px) {
+  .settingsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.settingsCard {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 1.75rem;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.cardIcon {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-md);
+  background: var(--pale-peach);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cardTitle {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.cardSubtitle {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.savedBanner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--success-bg);
+  color: var(--success);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.tokenForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.fieldLabel {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.textInput {
+  padding: 0.75rem 0.875rem;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border);
+  background: var(--surface-soft);
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  outline: none;
+}
+
+.textInput:focus {
+  border-color: var(--primary);
+  background: var(--white);
+  box-shadow: 0 0 0 3px rgba(185, 93, 63, 0.12);
+}
+
+.fieldHint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.fieldHint code {
+  background: var(--pale-peach);
+  color: var(--primary-dark);
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+}
+
+.buttonRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.saveBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius-md);
+  background: var(--primary);
+  color: var(--white);
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+
+.saveBtn:hover {
+  background: var(--primary-dark);
+}
+
+.resetBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--white);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.resetBtn:hover {
+  background: var(--soft-warm);
+}
+
+/* Info List */
+.infoList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.infoItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+}
+
+.infoLabel {
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.infoVal {
+  font-family: monospace;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.docsLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.docsLink:hover {
+  text-decoration: underline;
+}

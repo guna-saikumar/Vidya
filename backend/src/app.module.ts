@@ -11,6 +11,7 @@ import { SchoolsModule } from "./modules/schools/schools.module";
 import { StudentsModule } from "./modules/students/students.module";
 import { StudyMaterialsModule } from "./modules/study-materials/study-materials.module";
 import { SupportModule } from "./modules/support/support.module";
+import { AdminModule } from "./modules/admin/admin.module";
 
 loadRootEnv();
 
@@ -19,7 +20,7 @@ loadRootEnv();
  * Cross-cutting auth/db/mailer stay at `src/{auth,db,mailer}`.
  *
  * API surface (aliases without `/v1` are also available, plus `/health`):
- * auth · students · schools · curriculum · notifications · study-materials.
+ * auth · students · schools · curriculum · notifications · study-materials · admin.
  */
 @Module({
   imports: [
@@ -37,6 +38,7 @@ loadRootEnv();
     NotificationsModule,
     SupportModule,
     StudyMaterialsModule,
+    AdminModule,
   ],
 })
 export class AppModule {}

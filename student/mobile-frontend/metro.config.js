@@ -3,8 +3,8 @@ const { withNativeWind } = require("nativewind/metro");
 const path = require("path");
 
 const projectRoot = __dirname;
-// The Expo app lives at <repo>/mobile-frontend, so the workspace root is its parent.
-const monorepoRoot = path.resolve(projectRoot, "..");
+// The Expo app lives at <repo>/student/mobile-frontend, so the workspace root is two levels up.
+const monorepoRoot = path.resolve(projectRoot, "../..");
 
 const config = getDefaultConfig(projectRoot);
 

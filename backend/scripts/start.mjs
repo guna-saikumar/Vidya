@@ -424,7 +424,9 @@ function writeEnv(lanIp, lanHost) {
     ].join("\n")
   );
 
-  const mobileDir = existsSync(join(ROOT, "mobile-frontend"))
+  const mobileDir = existsSync(join(ROOT, "student/mobile-frontend"))
+    ? join(ROOT, "student/mobile-frontend")
+    : existsSync(join(ROOT, "mobile-frontend"))
     ? join(ROOT, "mobile-frontend")
     : join(ROOT, "frontend");
   mkdirSync(mobileDir, { recursive: true });
@@ -589,7 +591,9 @@ function writeAppEnv(lanIp) {
     process.env.NEXT_PUBLIC_API_URL ||
     `http://${lanIp}:${API_PORT}`;
 
-  const mobileDir = existsSync(join(ROOT, "mobile-frontend"))
+  const mobileDir = existsSync(join(ROOT, "student/mobile-frontend"))
+    ? join(ROOT, "student/mobile-frontend")
+    : existsSync(join(ROOT, "mobile-frontend"))
     ? join(ROOT, "mobile-frontend")
     : join(ROOT, "frontend");
   mkdirSync(mobileDir, { recursive: true });
@@ -638,7 +642,9 @@ ${line("API (env)", apiUrl)}
 
 function startExpo() {
   console.log("  Starting Expo…\n");
-  const mobileDirName = existsSync(join(ROOT, "mobile-frontend"))
+  const mobileDirName = existsSync(join(ROOT, "student/mobile-frontend"))
+    ? "student/mobile-frontend"
+    : existsSync(join(ROOT, "mobile-frontend"))
     ? "mobile-frontend"
     : "frontend";
   spawnProc(
