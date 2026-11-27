@@ -6,6 +6,7 @@ import { loadRootEnv, rootEnvFilePaths } from "./env";
 import { MailerModule } from "./mailer/mailer.module";
 import { CurriculumModule } from "./modules/curriculum/curriculum.module";
 import { HealthModule } from "./modules/health/health.module";
+import { LearningModule } from "./modules/learning/learning.module";
 import { NotificationsModule } from "./modules/notifications/notifications.module";
 import { SchoolsModule } from "./modules/schools/schools.module";
 import { StudentsModule } from "./modules/students/students.module";
@@ -20,7 +21,7 @@ loadRootEnv();
  * Cross-cutting auth/db/mailer stay at `src/{auth,db,mailer}`.
  *
  * API surface (aliases without `/v1` are also available, plus `/health`):
- * auth · students · schools · curriculum · notifications · study-materials · admin.
+ * auth · students · schools · curriculum · learning · notifications · study-materials · admin.
  */
 @Module({
   imports: [
@@ -35,6 +36,7 @@ loadRootEnv();
     StudentsModule,
     SchoolsModule,
     CurriculumModule,
+    LearningModule,
     NotificationsModule,
     SupportModule,
     StudyMaterialsModule,

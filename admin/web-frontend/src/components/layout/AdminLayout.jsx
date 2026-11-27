@@ -6,6 +6,7 @@ import {
   BellRing,
   Users,
   GraduationCap,
+  BookOpenCheck,
   LifeBuoy,
   Settings,
   LogOut,
@@ -24,6 +25,7 @@ const navItems = [
   { path: '/alerts', label: 'Broadcast Alerts', icon: BellRing },
   { path: '/students', label: 'Enrolled Students', icon: Users },
   { path: '/curriculum', label: 'Curriculum & Classes', icon: GraduationCap },
+  { path: '/learning-desk', label: 'Learning Desk', icon: BookOpenCheck },
   { path: '/support', label: 'Support Complaints', icon: LifeBuoy },
   { path: '/settings', label: 'Settings', icon: Settings },
 ];

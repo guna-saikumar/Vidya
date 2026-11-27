@@ -13,8 +13,12 @@ export const uploadsRoot = (): string =>
 
 export const avatarsDir = (): string => resolve(uploadsRoot(), "avatars");
 
+/** Photos attached to student doubts. */
+export const doubtsDir = (): string => resolve(uploadsRoot(), "doubts");
+
 /** Creates the uploads tree (idempotent) and returns the root. */
 export const ensureUploadsDirs = (): string => {
   mkdirSync(avatarsDir(), { recursive: true });
+  mkdirSync(doubtsDir(), { recursive: true });
   return uploadsRoot();
 };

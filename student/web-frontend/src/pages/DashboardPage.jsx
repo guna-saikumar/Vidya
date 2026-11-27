@@ -10,6 +10,7 @@ import {
   loadBookmarksFromApi,
 } from '../services/progressService';
 import { notificationService } from '../services/notificationService';
+import { LearningHub } from '../components/learning/LearningComponents';
 import {
   BookOpen,
   Bookmark,
@@ -240,6 +241,9 @@ export const DashboardPage = () => {
           </div>
         </Link>
       </section>
+
+      {/* ================= LEARNING ENGAGEMENT HUB ================= */}
+      <LearningHub context={{ classId: activeClassId }} />
 
       {/* ================= TWO COLUMN COMPREHENSIVE WORKSPACE ================= */}
       <div className={styles.twoColLayout}>

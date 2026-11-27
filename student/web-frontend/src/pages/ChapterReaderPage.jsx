@@ -10,6 +10,8 @@ import {
   addBookmark,
   removeBookmark,
 } from '../services/progressService';
+import { learningService, speakText } from '../services/learningService';
+import { GlossaryText, ReaderTools } from '../components/learning/LearningComponents';
 import {
   ArrowLeft,
   CheckCircle2,
@@ -38,6 +40,14 @@ export const ChapterReaderPage = () => {
   const [progressMap, setProgressMap] = useState(() => getStoredProgress());
   const [bookmarks, setBookmarks] = useState(() => getStoredBookmarks());
   const [selectedQuizIdx, setSelectedQuizIdx] = useState(null);
+  const [glossary, setGlossary] = useState([]);
+
+  useEffect(() => {
+    learningService
+      .getGlossary()
+      .then((entries) => setGlossary(Array.isArray(entries) ? entries : []))
+      .catch((err) => console.warn('Glossary sync error:', err));
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -213,6 +223,15 @@ export const ChapterReaderPage = () => {
         </div>
       </section>
 
+      {/* Read-aloud, glossary and doubt tools */}
+      <ReaderTools
+        text={`${chapter.title}. ${chapter.description || ''} ${chapter.sections
+          .map((section) => `${section.title}. ${section.content}`)
+          .join(' ')}`}
+        entries={glossary}
+        context={{ classId, subjectId, chapterId }}
+      />
+
       {/* Learning Objectives Box */}
       {chapter.learningGoals && chapter.learningGoals.length > 0 && (
         <div className={styles.objectivesBox}>
@@ -293,9 +312,15 @@ export const ChapterReaderPage = () => {
                 </button>
               </div>
 
-              {/* Section Content */}
+              {/* Section Content with bilingual glossary tooltips */}
               <div className={styles.sectionContent}>
-                <p>{section.content}</p>
+                <p>
+                  <GlossaryText
+                    text={section.content}
+                    entries={glossary}
+                    onSpeak={(text) => speakText(text, 'en-IN')}
+                  />
+                </p>
               </div>
 
               {/* Summary Point / Axiom Box */}

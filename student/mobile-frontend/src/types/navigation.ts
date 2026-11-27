@@ -7,6 +7,14 @@ export type RootStackParamList = {
   Profile: undefined;
   MyLearning: undefined;
   Bookmarks: undefined;
+  LearningHub:
+    | {
+        classId?: string;
+        subjectId?: string;
+        chapterId?: string;
+        sectionId?: string;
+      }
+    | undefined;
   ClassSubjects: { classId: string };
   SubjectIndex: { classId: string; subjectId: string };
   ChapterDetails: { classId: string; subjectId: string; chapterId: string };

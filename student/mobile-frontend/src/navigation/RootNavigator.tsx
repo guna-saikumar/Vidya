@@ -14,6 +14,7 @@ import { DashboardScreen } from '../screens/DashboardScreen';
 import { LearnScreen } from '../screens/LearnScreen';
 import { MyLearningScreen } from '../screens/MyLearningScreen';
 import { BookmarksScreen } from '../screens/BookmarksScreen';
+import { LearningHubScreen } from '../screens/LearningHubScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { ClassSubjectsScreen } from '../screens/ClassSubjectsScreen';
 import { SubjectIndexScreen } from '../screens/SubjectIndexScreen';
@@ -82,6 +83,7 @@ export const RootNavigator: React.FC = () => {
             {/* Secondary Screens */}
             <Stack.Screen name="MyLearning" component={MyLearningScreen} />
             <Stack.Screen name="Bookmarks" component={BookmarksScreen} />
+            <Stack.Screen name="LearningHub" component={LearningHubScreen} />
 
             {/* Student Onboarding & Academic Details Editor */}
             <Stack.Screen name="StudentOnboarding" component={StudentOnboardingScreen} options={{ animation: 'slide_from_bottom' }} />

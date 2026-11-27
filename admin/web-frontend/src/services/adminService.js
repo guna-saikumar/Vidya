@@ -119,4 +119,35 @@ export const adminService = {
     );
     return res.data;
   },
+
+  // ---- Learning desk (teacher workflow) ----
+  async getLearningOverview() {
+    const res = await adminApiClient.get('/api/v1/admin/learning/overview');
+    return res.data;
+  },
+
+  async getDoubts(status) {
+    const res = await adminApiClient.get('/api/v1/admin/learning/doubts', {
+      params: status ? { status } : undefined,
+    });
+    return res.data;
+  },
+
+  async updateDoubt(id, status, teacherNote) {
+    const res = await adminApiClient.patch(`/api/v1/admin/learning/doubts/${id}`, {
+      status,
+      teacherNote,
+    });
+    return res.data;
+  },
+
+  async getAssignments() {
+    const res = await adminApiClient.get('/api/v1/admin/learning/assignments');
+    return res.data;
+  },
+
+  async createAssignment(payload) {
+    const res = await adminApiClient.post('/api/v1/admin/learning/assignments', payload);
+    return res.data;
+  },
 };
