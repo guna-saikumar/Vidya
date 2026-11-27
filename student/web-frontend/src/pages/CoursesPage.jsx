@@ -1,8 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProfile } from '../hooks/useProfile';
 import { getClassById, getSubjectsByClass } from '../services/curriculumService';
-import { getStoredProgress } from '../services/progressService';
+import { getStoredProgress, loadProgressFromApi } from '../services/progressService';
 import {
   BookOpen,
   Search,
@@ -22,10 +22,20 @@ export const CoursesPage = () => {
 
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [progressMap, setProgressMap] = useState(() => getStoredProgress());
+
+  useEffect(() => {
+    let mounted = true;
+    loadProgressFromApi().then((progress) => {
+      if (mounted) setProgressMap(progress);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const schoolClass = useMemo(() => getClassById(activeClassId), [activeClassId]);
   const subjects = useMemo(() => getSubjectsByClass(activeClassId), [activeClassId]);
-  const progressMap = useMemo(() => getStoredProgress(), []);
 
   // Compute stats across enrolled curriculum
   const { totalChapters, completedChapters, progressPercent } = useMemo(() => {

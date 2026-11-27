@@ -50,3 +50,9 @@ export const updateComplaintStatusSchema = z.object({
   status: z.enum(COMPLAINT_STATUSES),
 });
 export type UpdateComplaintStatusInput = z.infer<typeof updateComplaintStatusSchema>;
+
+/** Public ticket tracking deliberately requires the email used at submission. */
+export const trackComplaintQuerySchema = z.object({
+  email: z.string().trim().email().max(160),
+});
+export type TrackComplaintQuery = z.infer<typeof trackComplaintQuerySchema>;

@@ -19,7 +19,9 @@ if (-not $DbPassword) {
 }
 
 $ErrorActionPreference = 'Stop'
-$psql = (Get-Command psql -ErrorAction SilentlyContinue)?.Source
+# Compatible with Windows PowerShell 5.1 (no null-conditional operator).
+$psqlCommand = Get-Command psql -ErrorAction SilentlyContinue
+$psql = if ($psqlCommand) { $psqlCommand.Source } else { "" }
 if (-not $psql) {
   $psql = "C:\Program Files\PostgreSQL\18\bin\psql.exe"
 }

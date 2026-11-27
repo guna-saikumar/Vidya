@@ -81,6 +81,19 @@ export class SupportService {
     return row ? toComplaintDto(row) : null;
   }
 
+  /** Public tracking: ticket reference plus the submitter's email. */
+  async findByTicketRef(ticketRef: string, email: string) {
+    const row = await this.db.queryOne<ComplaintRow>(
+      `SELECT ${COMPLAINT_COLUMNS}
+         FROM contact_tickets
+        WHERE "ticket_ref" = $1
+          AND LOWER(COALESCE("email", '')) = LOWER($2)`,
+      [ticketRef, email.trim()]
+    );
+    if (!row) throw new NotFoundException({ error: "Complaint not found" });
+    return toComplaintDto(row);
+  }
+
   async listLatest(limit = 200) {
     const { rows } = await this.db.query<ComplaintRow>(
       `SELECT ${COMPLAINT_COLUMNS}

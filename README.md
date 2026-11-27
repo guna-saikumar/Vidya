@@ -10,9 +10,12 @@ Student learning platform: Expo student app + NestJS (Fastify) API on Postgres, 
 
 | path | what it is |
 |---|---|
-| `mobile-frontend/` | Expo student mobile app (React Native, TypeScript) |
-| `web-frontend/` | Student web application (React, Vite, CSS Modules) |
+| `student/mobile-frontend/` | Expo student mobile app (React Native, TypeScript) |
+| `student/web-frontend/` | Student web application (React, Vite, CSS Modules) |
+| `admin/web-frontend/` | Admin web portal (React, Vite) |
+| `admin/mobile-frontend/` | Admin Expo app |
 | `backend/` | Unified NestJS 11 + Fastify 5 API and PostgreSQL database engine (`backend/db/`) |
+| `contact-us/` | Standalone Complaints & Helpdesk module (`api/`, `mobile/`, `db/`) |
 
 More: [docs/architecture.md](docs/architecture.md), [docs/tech-stack.md](docs/tech-stack.md), [docs/repo-structure.md](docs/repo-structure.md), [docs/study-materials.md](docs/study-materials.md)
 
@@ -29,7 +32,7 @@ npm start              # full stack: Postgres + migrate/seed + API + Expo + pgwe
 npm run start:app      # student Expo only (uses API URL from existing .env)
 ```
 
-`npm start` auto-detects your Wi‑Fi IP, runs migrate + seed (with status steps), writes `.env` + `apps/student-mobile/.env` / `.env.local`, and prints a URL board (LAN IP + localhost) for App / API / Docs / Database / DB UI. The Expo terminal stays interactive (QR + `i` / `a` / `w` / `r`).
+`npm start` auto-detects your Wi‑Fi IP, runs migrate + seed (with status steps), writes `.env` + `student/mobile-frontend/.env` / `.env.local`, and prints a URL board (LAN IP + localhost) for App / API / Docs / Database / DB UI. The Expo terminal stays interactive (QR + `i` / `a` / `w` / `r`).
 
 **Postgres (one-time):**
 - macOS: `brew install postgresql@17` (also auto-installed by `npm start` when Homebrew is present)
@@ -47,10 +50,19 @@ On Apple networks, share URLs often use `YourMac.local` (Bonjour) so teammates n
 ## Tests
 
 ```bash
-pnpm exec tsc --noEmit
-pnpm --dir apps/api test
-pnpm --dir packages/auth test
-pnpm --dir apps/student-mobile test
+pnpm typecheck
+pnpm lint
+pnpm test
+pnpm build
+```
+
+The Contact Us module has its own install/typecheck commands:
+
+```bash
+npm install --prefix contact-us/api
+npm run typecheck --prefix contact-us/api
+npm install --prefix contact-us/mobile
+npm run typecheck --prefix contact-us/mobile
 ```
 
 ## Env

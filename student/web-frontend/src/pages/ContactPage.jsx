@@ -16,6 +16,15 @@ import {
   GraduationCap,
 } from 'lucide-react';
 import styles from './ContactPage.css';
+import { submitComplaint, trackComplaint } from '../services/supportService';
+
+const STATUS_LABELS = {
+  open: 'In Review',
+  in_progress: 'In Progress',
+  resolved: 'Resolved',
+  closed: 'Closed',
+  escalated: 'Escalated',
+};
 
 const CATEGORIES = [
   { value: 'technical_issue', label: 'Technical issue' },
@@ -45,17 +54,19 @@ export const ContactPage = () => {
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const [ticketRef, setTicketRef] = useState(null);
 
   // Tickets history
-  const [tickets, setTickets] = useState(() => {
+  const readTickets = () => {
     try {
       const raw = localStorage.getItem('@vidya_student_tickets');
       return raw ? JSON.parse(raw) : [];
     } catch {
       return [];
     }
-  });
+  };
+  const [tickets, setTickets] = useState(() => readTickets());
 
   useEffect(() => {
     if (profile) {
@@ -74,34 +85,89 @@ export const ContactPage = () => {
     }
   }, [profile, user]);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setSubmitting(true);
+  // Refresh status from the Contact Us API whenever the ticket list is opened.
+  useEffect(() => {
+    if (activeTab !== 'requests') return;
+    let mounted = true;
+    const saved = readTickets();
 
-    setTimeout(() => {
-      const newRef = `TKT-${Math.floor(100000 + Math.random() * 900000)}`;
-      const newTicket = {
-        id: newRef,
-        category,
-        subject,
-        message,
-        createdAt: new Date().toISOString(),
-        status: 'open',
-      };
-
-      const updated = [newTicket, ...tickets];
+    Promise.all(
+      saved
+        .filter((t) => t.email && t.id?.startsWith('VIDYA-'))
+        .map(async (ticket) => {
+          try {
+            const remote = await trackComplaint(ticket.id, ticket.email);
+            return { id: ticket.id, status: remote.status };
+          } catch {
+            return null;
+          }
+        })
+    ).then((results) => {
+      if (!mounted) return;
+      const byId = new Map(results.filter(Boolean).map((r) => [r.id, r.status]));
+      if (byId.size === 0) return;
+      const updated = saved.map((t) =>
+        byId.has(t.id) ? { ...t, status: byId.get(t.id) } : t
+      );
       setTickets(updated);
       try {
         localStorage.setItem('@vidya_student_tickets', JSON.stringify(updated));
       } catch (err) {
         console.error('Failed to save tickets:', err);
       }
+    });
+    return () => {
+      mounted = false;
+    };
+  }, [activeTab]);
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setSubmitError('');
+
+    const payload = {
+      full_name: fullName,
+      class_grade: Number(classGrade),
+      section,
+      roll_number: rollNumber,
+      email,
+      phone,
+      category,
+      subject,
+      message,
+    };
+
+    try {
+      const saved = await submitComplaint(payload);
+      const newRef = saved.ticket_ref;
+      const newTicket = {
+        id: newRef,
+        category,
+        subject,
+        message,
+        email,
+        createdAt: saved.created_at || new Date().toISOString(),
+        status: saved.status || 'open',
+      };
+      const updated = [newTicket, ...readTickets().filter((t) => t.id !== newRef)];
+      setTickets(updated);
+      try {
+        localStorage.setItem('@vidya_student_tickets', JSON.stringify(updated));
+      } catch (err) {
+        console.error('Failed to save tickets:', err);
+      }
       setTicketRef(newRef);
-      setSubmitting(false);
       setSubject('');
       setMessage('');
-    }, 600);
+    } catch (err) {
+      setSubmitError(
+        err?.response?.data?.error ||
+          'Unable to reach the support desk. Please try again in a moment.'
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -270,6 +336,11 @@ export const ContactPage = () => {
               <Send size={16} />
               <span>{submitting ? 'Submitting...' : 'Submit Support Ticket'}</span>
             </button>
+            {submitError && (
+              <p style={{ color: '#b42318', fontSize: 13, margin: '8px 0 0' }} role="alert">
+                {submitError}
+              </p>
+            )}
           </form>
         </div>
       )}
@@ -345,7 +416,7 @@ export const ContactPage = () => {
                       </span>
                     </div>
                     <span className={styles.ticketStatusBadge}>
-                      {t.status === 'open' ? 'In Review' : 'Resolved'}
+                      {STATUS_LABELS[t.status] || 'In Review'}
                     </span>
                   </div>
 

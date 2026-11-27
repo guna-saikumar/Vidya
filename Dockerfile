@@ -11,11 +11,12 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig.json tsconfig.base.json ./
-COPY apps ./apps
-COPY packages ./packages
+COPY student ./student
+COPY admin ./admin
+COPY backend ./backend
 
 RUN pnpm install --frozen-lockfile --network-concurrency=1 --child-concurrency=1
 
-EXPOSE 4000 8081 8082
+EXPOSE 4000 5173 5175 8081
 
 CMD ["pnpm", "dev:api"]

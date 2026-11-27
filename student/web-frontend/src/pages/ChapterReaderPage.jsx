@@ -1,10 +1,12 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getChapterById } from '../services/curriculumService';
 import {
   getStoredProgress,
+  loadProgressFromApi,
   saveChapterProgress,
   getStoredBookmarks,
+  loadBookmarksFromApi,
   addBookmark,
   removeBookmark,
 } from '../services/progressService';
@@ -36,6 +38,20 @@ export const ChapterReaderPage = () => {
   const [progressMap, setProgressMap] = useState(() => getStoredProgress());
   const [bookmarks, setBookmarks] = useState(() => getStoredBookmarks());
   const [selectedQuizIdx, setSelectedQuizIdx] = useState(null);
+
+  useEffect(() => {
+    let mounted = true;
+    Promise.all([loadProgressFromApi(), loadBookmarksFromApi()])
+      .then(([progress, savedBookmarks]) => {
+        if (!mounted) return;
+        setProgressMap(progress);
+        setBookmarks(savedBookmarks);
+      })
+      .catch((err) => console.warn('Chapter sync error:', err));
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const chapterProgress = progressMap[chapterId];
   const isCompleted = Boolean(chapterProgress?.completed);
