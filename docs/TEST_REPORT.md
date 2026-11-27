@@ -76,7 +76,9 @@ non-existent `class_id` / `byte_size` columns from `study_materials`, whose real
 
 The Contact Us page and the standalone grievance flow were built by the contributor and
 are well composed: category chips, pre-filled student metadata, ticket success state,
-helpline panel, and “My Requests” history all behave correctly.
+helpline panel, and “My Requests” history all behave correctly. Explicit credit, in the
+contributor's words: “the contact us page iss ccometel built by me”. This PR does not
+replace that UI; it connects it to the existing API and preserves its design.
 
 One gap remained: the student web page generated a local `TKT-...` number and stored
 tickets only in `localStorage`, while the standalone Contact Us API was already available
