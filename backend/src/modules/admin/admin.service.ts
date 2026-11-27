@@ -102,10 +102,13 @@ export class AdminService {
       this.db.queryOne<{ count: string }>(
         `SELECT COUNT(*)::text as count FROM contact_tickets WHERE "status" = 'open'`
       ),
+      // StudentProfile.grade is TEXT (grades are stored as "6".."10"), so
+      // cast safely instead of comparing text with an integer literal.
       this.db.query<{ grade: number; count: string }>(
-        `SELECT COALESCE("grade", 0) as grade, COUNT(*)::text as count
+        `SELECT CASE WHEN "grade" ~ '^[0-9]+$' THEN "grade"::integer ELSE 0 END as grade,
+                COUNT(*)::text as count
          FROM "StudentProfile"
-         GROUP BY "grade"
+         GROUP BY CASE WHEN "grade" ~ '^[0-9]+$' THEN "grade"::integer ELSE 0 END
          ORDER BY grade ASC`
       ),
       this.db.query<{
@@ -133,9 +136,12 @@ export class AdminService {
         byteSize: number;
         createdAt: Date;
       }>(
-        `SELECT "id", "title", "class_id" as "classId", "subject_id" as "subjectId", "byte_size" as "byteSize", "created_at" as "createdAt"
-         FROM study_materials
-         ORDER BY "created_at" DESC
+        // study_materials uses snake_case columns; the class is resolved through Subject.
+        `SELECT m."id", m."title", s."classId" as "classId", m."subject_id" as "subjectId",
+                m."file_size" as "byteSize", m."created_at" as "createdAt"
+         FROM study_materials m
+         LEFT JOIN "Subject" s ON s."id" = m."subject_id"
+         ORDER BY m."created_at" DESC
          LIMIT 6`
       ),
     ]);
@@ -163,7 +169,7 @@ export class AdminService {
         title: r.title,
         classId: r.classId,
         subjectId: r.subjectId,
-        byteSize: r.byteSize,
+        byteSize: Number(r.byteSize || 0),
         createdAt: r.createdAt.toISOString(),
       })),
     };

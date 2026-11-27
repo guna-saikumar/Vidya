@@ -6,8 +6,11 @@ import { getClassById, getSubjectsByClass } from '../services/curriculumService'
 import {
   getStoredProgress,
   getStoredBookmarks,
+  loadProgressFromApi,
+  loadBookmarksFromApi,
 } from '../services/progressService';
 import { notificationService } from '../services/notificationService';
+import { LearningHub } from '../components/learning/LearningComponents';
 import {
   BookOpen,
   Bookmark,
@@ -34,9 +37,23 @@ export const DashboardPage = () => {
   const activeClassId = profile?.activeClassId || 'class-10';
   const schoolClass = useMemo(() => getClassById(activeClassId), [activeClassId]);
   const subjects = useMemo(() => getSubjectsByClass(activeClassId), [activeClassId]);
-  const progressMap = useMemo(() => getStoredProgress(), []);
-  const bookmarks = useMemo(() => getStoredBookmarks(), []);
+  const [progressMap, setProgressMap] = useState(() => getStoredProgress());
+  const [bookmarks, setBookmarks] = useState(() => getStoredBookmarks());
   const [notifications, setNotifications] = useState([]);
+
+  useEffect(() => {
+    let mounted = true;
+    Promise.all([loadProgressFromApi(), loadBookmarksFromApi()])
+      .then(([progress, savedBookmarks]) => {
+        if (!mounted) return;
+        setProgressMap(progress);
+        setBookmarks(savedBookmarks);
+      })
+      .catch((err) => console.warn('Dashboard sync error:', err));
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     notificationService
@@ -224,6 +241,9 @@ export const DashboardPage = () => {
           </div>
         </Link>
       </section>
+
+      {/* ================= LEARNING ENGAGEMENT HUB ================= */}
+      <LearningHub context={{ classId: activeClassId }} />
 
       {/* ================= TWO COLUMN COMPREHENSIVE WORKSPACE ================= */}
       <div className={styles.twoColLayout}>

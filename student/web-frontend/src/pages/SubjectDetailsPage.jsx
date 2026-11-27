@@ -1,7 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getSubjectById, getClassById } from '../services/curriculumService';
-import { getStoredProgress } from '../services/progressService';
+import { getStoredProgress, loadProgressFromApi } from '../services/progressService';
 import {
   ArrowLeft,
   BookOpen,
@@ -22,7 +22,17 @@ export const SubjectDetailsPage = () => {
 
   const schoolClass = useMemo(() => getClassById(classId), [classId]);
   const subject = useMemo(() => getSubjectById(classId, subjectId), [classId, subjectId]);
-  const progressMap = useMemo(() => getStoredProgress(), []);
+  const [progressMap, setProgressMap] = useState(() => getStoredProgress());
+
+  useEffect(() => {
+    let mounted = true;
+    loadProgressFromApi().then((progress) => {
+      if (mounted) setProgressMap(progress);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   if (!subject) {
     return (

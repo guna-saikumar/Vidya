@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from "@nestjs/common";
 import {
@@ -18,8 +19,10 @@ import { AdminTokenGuard } from "../common/admin-token.guard";
 import { ZodValidationPipe } from "../common/zod-validation.pipe";
 import {
   createComplaintSchema,
+  trackComplaintQuerySchema,
   updateComplaintStatusSchema,
   type CreateComplaintInput,
+  type TrackComplaintQuery,
   type UpdateComplaintStatusInput,
 } from "./support.schemas";
 import { SupportService } from "./support.service";
@@ -93,6 +96,15 @@ export class SupportController {
   @ApiSecurity("x-admin-token")
   list() {
     return this.support.listLatest();
+  }
+
+  @Get("complaints/:ticketRef")
+  @ApiOperation({ summary: "Track a complaint by ticket reference and email" })
+  track(
+    @Param("ticketRef") ticketRef: string,
+    @Query(new ZodValidationPipe(trackComplaintQuerySchema)) query: TrackComplaintQuery
+  ) {
+    return this.support.findByTicketRef(ticketRef, query.email);
   }
 
   @Patch("complaints/:ticketRef/status")

@@ -10,6 +10,7 @@ import { AlertsNotificationsPage } from './pages/AlertsNotificationsPage';
 import { StudentsManagementPage } from './pages/StudentsManagementPage';
 import { CurriculumClassesPage } from './pages/CurriculumClassesPage';
 import { SupportTicketsPage } from './pages/SupportTicketsPage';
+import { LearningDeskPage } from './pages/LearningDeskPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { AdminProfilePage } from './pages/AdminProfilePage';
 
@@ -42,6 +43,7 @@ export const App = () => {
             <Route path="students" element={<StudentsManagementPage />} />
             <Route path="curriculum" element={<CurriculumClassesPage />} />
             <Route path="support" element={<SupportTicketsPage />} />
+            <Route path="learning-desk" element={<LearningDeskPage />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="profile" element={<AdminProfilePage />} />
           </Route>

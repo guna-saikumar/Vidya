@@ -158,6 +158,24 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
 
         </View>
 
+        {/* Learning Hub: streaks, tasks, doubts and glossary */}
+        <TouchableOpacity
+          className="rounded-[22px] bg-[#FFF7F2] border border-[#F2DED3] p-4 flex-row items-center gap-3"
+          onPress={() => navigation.navigate('LearningHub')}
+          activeOpacity={0.88}
+        >
+          <View className="w-11 h-11 rounded-xl bg-primary/15 items-center justify-center">
+            <MaterialIcons name="auto-awesome" size={23} color={Colors.primary} />
+          </View>
+          <View className="flex-1">
+            <Text className="font-manrope-extrabold text-sm text-textPrimary">Your Learning Hub</Text>
+            <Text className="font-manrope-medium text-[11px] text-textSecondary mt-0.5">
+              Streaks, XP, teacher tasks, doubts & glossary
+            </Text>
+          </View>
+          <MaterialIcons name="arrow-forward" size={17} color={Colors.primary} />
+        </TouchableOpacity>
+
         {/* Curriculum Overview / Stats Grid - Dynamic to Enrolled Class */}
         <View className="flex-row items-center justify-between">
           <View>

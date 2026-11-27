@@ -1,6 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getStoredBookmarks, removeBookmark } from '../services/progressService';
+import {
+  getStoredBookmarks,
+  loadBookmarksFromApi,
+  removeBookmark,
+} from '../services/progressService';
 import {
   Bookmark,
   Trash2,
@@ -16,6 +20,16 @@ export const BookmarksPage = () => {
   const navigate = useNavigate();
   const [bookmarks, setBookmarks] = useState(() => getStoredBookmarks());
   const [filterType, setFilterType] = useState('all');
+
+  useEffect(() => {
+    let mounted = true;
+    loadBookmarksFromApi().then((saved) => {
+      if (mounted) setBookmarks(saved);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const handleRemove = async (id, e) => {
     e.stopPropagation();

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,13 @@ import { HeaderBar, BottomNav } from '../components/navigation';
 import { CalloutCard } from '../components/common';
 import { getSectionById } from '../services/curriculumService';
 import { getApiErrorMessage } from '../services/apiClient';
+import {
+  GlossaryEntry,
+  learningService,
+  speakText,
+  splitGlossaryText,
+  stopSpeaking,
+} from '../services/learningService';
 import { showAlert } from '../utils/dialog';
 import { useLearningProgress } from '../hooks/useLearningProgress';
 import { RootStackParamList } from '../types/navigation';
@@ -40,6 +47,20 @@ export const SectionDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
   const chapter = result?.chapter;
   const subject = result?.subject;
   const schoolClass = result?.schoolClass;
+
+  const [glossary, setGlossary] = useState<GlossaryEntry[]>([]);
+  const [selectedTerm, setSelectedTerm] = useState<GlossaryEntry | null>(null);
+  const [voiceLanguage, setVoiceLanguage] = useState('en-IN');
+
+  useEffect(() => {
+    learningService
+      .getGlossary()
+      .then((entries) => setGlossary(Array.isArray(entries) ? entries : []))
+      .catch((error) => console.warn('Glossary sync error:', error));
+    return () => stopSpeaking();
+  }, []);
+
+  const glossaryParts = splitGlossaryText(section?.content || '', glossary);
 
   if (!section || !chapter || !subject || !schoolClass) {
     return (
@@ -143,8 +164,80 @@ export const SectionDetailsScreen: React.FC<Props> = ({ route, navigation }) => 
           </TouchableOpacity>
         </View>
 
-        {/* Lead overview paragraph */}
-        <Text className="font-manrope-medium text-[15px] text-textLead leading-[25px]">{section.content}</Text>
+        {/* Read-aloud, bilingual glossary and doubt tools */}
+        <View className="flex-row flex-wrap items-center gap-2">
+          <TouchableOpacity
+            className="flex-row items-center gap-1 rounded-full border border-border bg-white px-3 py-1.5"
+            onPress={() => speakText(`${section.title}. ${section.content}`, voiceLanguage)}
+            activeOpacity={0.8}
+          >
+            <MaterialIcons name="headphones" size={15} color={Colors.primary} />
+            <Text className="font-manrope-bold text-[11px] text-primary">Listen</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            className="flex-row items-center gap-1 rounded-full border border-border bg-white px-3 py-1.5"
+            onPress={() => setVoiceLanguage((current) => (current === 'en-IN' ? 'hi-IN' : 'en-IN'))}
+            activeOpacity={0.8}
+          >
+            <MaterialIcons name="translate" size={15} color={Colors.primary} />
+            <Text className="font-manrope-bold text-[11px] text-primary">
+              {voiceLanguage === 'en-IN' ? 'English' : 'हिंदी'}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            className="flex-row items-center gap-1 rounded-full bg-primary px-3 py-1.5"
+            onPress={() =>
+              navigation.navigate('LearningHub', {
+                classId,
+                subjectId,
+                chapterId,
+                sectionId,
+              })
+            }
+            activeOpacity={0.8}
+          >
+            <MaterialIcons name="help-outline" size={15} color={Colors.white} />
+            <Text className="font-manrope-bold text-[11px] text-white">Ask a doubt</Text>
+          </TouchableOpacity>
+        </View>
+
+        {selectedTerm && (
+          <View className="rounded-2xl border border-[#D9C7F0] bg-[#F8F3FF] p-3 gap-1">
+            <View className="flex-row items-center justify-between gap-2">
+              <Text className="font-manrope-extrabold text-sm text-[#5E3E8A]">{selectedTerm.term}</Text>
+              <TouchableOpacity
+                onPress={() =>
+                  speakText(`${selectedTerm.term}. ${selectedTerm.english}`, 'en-IN')
+                }
+                activeOpacity={0.8}
+              >
+                <MaterialIcons name="volume-up" size={18} color="#5E3E8A" />
+              </TouchableOpacity>
+            </View>
+            <Text className="font-manrope-medium text-xs text-textSecondary">{selectedTerm.english}</Text>
+            <Text className="font-manrope-medium text-xs text-[#7A5C9E]">{selectedTerm.hindi}</Text>
+            <TouchableOpacity onPress={() => setSelectedTerm(null)} activeOpacity={0.8}>
+              <Text className="font-manrope-bold text-[10px] text-primary">Close</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Lead overview paragraph with tappable glossary tooltips */}
+        <Text className="font-manrope-medium text-[15px] text-textLead leading-[25px]">
+          {glossaryParts.map((part, index) =>
+            part.entry ? (
+              <Text
+                key={index}
+                className="font-manrope-bold text-primary underline"
+                onPress={() => setSelectedTerm(part.entry || null)}
+              >
+                {part.text}
+              </Text>
+            ) : (
+              <Text key={index}>{part.text}</Text>
+            )
+          )}
+        </Text>
 
         {/* Understanding the idea section matching Figma Make */}
         <View className="gap-2 mt-1">

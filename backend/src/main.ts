@@ -8,7 +8,12 @@ import {
 } from "@nestjs/platform-fastify";
 import { AppModule } from "./app.module";
 import { HttpErrorFilter } from "./common/http-exception.filter";
-import { avatarsDir, ensureUploadsDirs, UPLOADS_URL_PREFIX } from "./common/uploads";
+import {
+  avatarsDir,
+  doubtsDir,
+  ensureUploadsDirs,
+  UPLOADS_URL_PREFIX,
+} from "./common/uploads";
 import { setupApiDocs } from "./docs";
 import { loadRootEnv } from "./env";
 import { maxPdfBytes } from "./modules/study-materials/pdf-storage";
@@ -34,6 +39,7 @@ async function bootstrap() {
       "Accept",
       "Range",
       "x-admin-token",
+      "x-teacher-id",
     ],
   });
 
@@ -43,12 +49,18 @@ async function bootstrap() {
     limits: { fileSize: Math.max(5 * 1024 * 1024, maxPdfBytes()), files: 1 },
   });
 
-  // Only avatars are publicly served. Study-material PDFs are streamed by the
-  // authenticated /api/.../view route, never from a static directory.
+  // Avatars and doubt photos are served as small static uploads. Study-material
+  // PDFs are streamed by the authenticated /api/.../view route, never from a
+  // static directory or a database blob.
   ensureUploadsDirs();
   await app.register(fastifyStatic as never, {
     root: avatarsDir(),
     prefix: `${UPLOADS_URL_PREFIX}/avatars/`,
+    decorateReply: false,
+  });
+  await app.register(fastifyStatic as never, {
+    root: doubtsDir(),
+    prefix: `${UPLOADS_URL_PREFIX}/doubts/`,
     decorateReply: false,
   });
 
